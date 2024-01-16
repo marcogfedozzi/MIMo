@@ -19,6 +19,7 @@ import mujoco
 import trimesh
 from trimesh import PointCloud
 from cachetools import cachedmethod, LRUCache
+from functools import partial
 import CacheToolsUtils
 from matplotlib import pyplot as plt
 
@@ -1116,9 +1117,15 @@ class TrimeshTouch(Touch):
                 closest_distance = distance
         return self._convert_active_sensor_idx(body_id, closest[0], closest[1]), closest_distance
 
-    @cachedmethod(operator.attrgetter("_neighbour_cache"),
-                  key=lambda inst, distances, body_id, submesh_id, vertex_id, k:
-                  hash(("nearest_k", body_id, submesh_id, vertex_id, k)))
+    # @cachedmethod(operator.attrgetter("_neighbour_cache"),
+    #               key=lambda inst, distances, body_id, submesh_id, vertex_id, k:
+    #               hash(("nearest_k", body_id, submesh_id, vertex_id, k)))
+# 
+    @cachedmethod(
+            lambda self: self._neighbour_cache, 
+            key=lambda distances, body_id, submesh_id, vertex_id, k:
+                hash(("nearest_k", body_id, submesh_id, vertex_id, k))
+    )
     def _nearest_k_search(self, distances, body_id: int, submesh_id: int, vertex_id: int, k: int):
         """ Find the `k` nearest sensor points using BFS.
 
@@ -1237,9 +1244,15 @@ class TrimeshTouch(Touch):
         """
         return mesh.vertex_adjacency_graph
 
-    @cachedmethod(operator.attrgetter("_neighbour_cache"),
-                  key=lambda inst, distances, body_id, submesh_id, vertex_id, distance_limit:
-                  hash(("within_distance", body_id, submesh_id, vertex_id, distance_limit)))
+    #@cachedmethod(operator.attrgetter("_neighbour_cache"),
+    #              key=lambda inst, distances, body_id, submesh_id, vertex_id, distance_limit:
+    #              hash(("within_distance", body_id, submesh_id, vertex_id, distance_limit)))
+    @cachedmethod(
+            lambda self: self._neighbour_cache, 
+            key=lambda distances, body_id, submesh_id, vertex_id, distance_limit:
+                hash(("within_distance", body_id, submesh_id, vertex_id, distance_limit))
+    )
+    
     def _nearest_within_distance_search(self, distances, body_id, submesh_id,
                                         vertex_id, distance_limit):
         """ Finds all sensor points within a distance limit using BFS on the sensor mesh.

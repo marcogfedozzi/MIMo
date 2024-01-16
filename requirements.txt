@@ -8,6 +8,9 @@ CacheToolsUtils
 networkx
 rtree
 mujoco
-gymnasium==0.28.1
 stable-baselines3>=2.0.0
 opencv-python
+
+#gymnasium==0.28.1
+gymnasium @ git+https://github.com/Farama-Foundation/Gymnasium.git@611dcbdde5a6f26a7ab94475b3cb1eb72de2f1da
+# NOTE: change this to gymnasium==1.0.0 once it is released (end of January probably)

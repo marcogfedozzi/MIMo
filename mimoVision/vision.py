@@ -10,8 +10,7 @@ import matplotlib
 from typing import Dict
 import numpy as np
 from gymnasium.envs.mujoco import MujocoEnv
-from mujoco import MjrRect
-
+from mujoco import MjrRect, mj_name2id, mjtObj
 
 
 class Vision:
@@ -34,7 +33,7 @@ class Vision:
 
     """
     def __init__(self, env, camera_parameters):
-        self.env = env
+        self.env: MujocoEnv = env
         self.camera_parameters = camera_parameters
         self.sensor_outputs = {}
 
@@ -106,28 +105,42 @@ class SimpleVision(Vision):
         old_cam_id = self.env.camera_id
 
         # Ensure that viewer is initialized
-        if not self.env.mujoco_renderer._viewers.get("rgb_array"):
-            self.env.mujoco_renderer.render(render_mode="rgb_array")
+        #if not self.env.mujoco_renderer._viewers.get("rgb_array"):
+        #    self.env.mujoco_renderer.render(render_mode="rgb_array")
 
-        rgb_viewer = self.env.mujoco_renderer._viewers["rgb_array"]
-        old_viewport = rgb_viewer.viewport
+        #print(self.env.mujoco_renderer._viewers)
 
-        self.env.render_mode = "rgb_array"
+        #rgb_viewer = self.env.mujoco_renderer._get_viewer("rgb_array")
+        #old_viewport = rgb_viewer.viewport
+
+        #self.env.render_mode = "rgb_array"
         self.env.camera_id = None
+        
+        old_env_w, old_env_h = self.env.mujoco_renderer.width, self.env.mujoco_renderer.height
 
         imgs = {}
         for camera in self.camera_parameters:
-            self.env.camera_name = camera
-            rgb_viewer.viewport = self._viewports[camera]
-            imgs[camera] = self.env.render()
+            self.env.camera_id = self._camera_name_to_id(camera)
+            self.env.mujoco_renderer.width  = self.camera_parameters[camera]["width"]
+            self.env.mujoco_renderer.height = self.camera_parameters[camera]["height"]
+            #rgb_viewer.viewport = self._viewports[camera]
+            # imgs[camera] = self.env.render()
+            imgs[camera] = self.env.mujoco_renderer.render(render_mode="rgb_array")
         self.sensor_outputs = imgs
 
-        self.env.render_mode = old_mode
+        #self.env.render_mode = old_mode
         self.env.camera_name = old_cam_name
-        self.env.camera_id = old_cam_id
-        rgb_viewer.viewport = old_viewport
+        self.env.camera_id = old_cam_id # self._camera_name_to_id(old_cam_name)
+        #rgb_viewer.viewport = old_viewport
 
         return imgs
+
+    def _camera_name_to_id(self, camera_name):
+         return mj_name2id(
+                self.env.model,
+                mjtObj.mjOBJ_CAMERA,
+                camera_name
+            )
 
     def save_obs_to_file(self, directory, suffix=""):
         """ Saves the output images to file.

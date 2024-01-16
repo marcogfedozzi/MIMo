@@ -351,7 +351,11 @@ class MIMoEnv(MujocoEnv, utils.EzPickle):
         self._set_observation_space()
 
     def _initialize_simulation(self,):
-        super()._initialize_simulation()
+        # NOTE: move this outside of _initialize_simulation
+        # as that function returns model and data that are set in 
+        # the __init__, but here we are already updating the model
+
+        self.model, self.data = super()._initialize_simulation() 
 
         fps = int(np.round(1 / self.dt))
         self.metadata = {
@@ -372,6 +376,8 @@ class MIMoEnv(MujocoEnv, utils.EzPickle):
         self._set_initial_position(self._initial_qpos)
 
         self.actuation_model = self.actuation_model(self, self.mimo_actuators)
+
+        return self.model, self.data
 
     @property
     def n_actuators(self):
