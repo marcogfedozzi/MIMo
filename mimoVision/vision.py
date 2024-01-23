@@ -146,3 +146,26 @@ class SimpleVision(Vision):
             file_name = camera_name + suffix + ".png"
             matplotlib.image.imsave(os.path.join(
                 directory, file_name), self.sensor_outputs[camera_name], vmin=0.0, vmax=1.0)
+
+class EditVision(SimpleVision):
+    """A class that edits the iamges returned by the cameras before returning them to the environment."""
+    pass
+
+class LogPolarVision(EditVision):
+    """
+    Like the SimpleVision class, but the image is transformed into
+    logpolar coordinates before being returned.
+
+    Optionally can return the cartesian reprojection of the logpolar image.
+    """
+    pass
+
+class IncreasingActuityVision(EditVision):
+    """
+    Like the SimpleVision class, but the image is blurred before being returned.
+
+    The blur is a gaussian blur with decreasing standard deviation.
+    The std can decrease at fixed intervals or linearly (step size must be passed
+    to the std_update function).
+    """
+    pass
