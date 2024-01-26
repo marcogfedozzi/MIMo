@@ -11,6 +11,10 @@ from typing import Dict
 import numpy as np
 from gymnasium.envs.mujoco import MujocoEnv
 from mujoco import MjrRect
+from typing import Callable, Dict
+
+from numpy import ndarray
+from functools import partial
 
 
 
@@ -148,8 +152,63 @@ class SimpleVision(Vision):
                 directory, file_name), self.sensor_outputs[camera_name], vmin=0.0, vmax=1.0)
 
 class EditVision(SimpleVision):
-    """A class that edits the iamges returned by the cameras before returning them to the environment."""
-    pass
+    """A class that edits the iamges returned by the cameras before returning them to the environment.
+
+    Args:
+        env: The environment to which this module should be attached
+        camera_parameters: A dictionary containing the configuration.
+            it should contain the entries:
+            - "warp_function" which is a function that takes an image and returns an edited version of it.
+            - "warp_function_args" which is a dictionary of arguments to be passed to the function
+        func: A function that takes an image and returns an edited version of it.
+    """
+
+
+    def __init__(self, env, camera_parameters): #, func: Callable[[np.ndarray, Dict], np.ndarray] = lambda x, _: x, func_args: Dict = {}):
+
+        
+        super().__init__(env, camera_parameters)
+
+        self._image_warp_func = {}
+
+        for camera in camera_parameters:
+            self._image_warp_func[camera] = partial(camera_parameters[camera]["warp_function"], **camera_parameters[camera]["warp_function_args"])
+        
+
+        # check if func_args already specifies one set of args for each camera; otherwise copy the same args for each camera
+    
+    def _set_image_warp_func_args(self, **kwargs):
+        """
+        kwargs: a dictionary of arguments to be passed to the function
+        expected either a list of arguments for each camera or a single set of arguments for all cameras
+        
+        e.g.
+
+        _set_func_args(eye_left_args = {"arg1": 1, "arg2": 2}, eye_right_args = {"arg1": 3, "arg2": 4})
+        or
+        _set_func_args(arg1=1, arg2=2)
+        """
+
+        _c = True
+        for camera in self._image_warp_func:
+            _c = _c and camera in kwargs
+
+        if not _c:
+            for camera in self._image_warp_func: # one set of parameters shared by all cameras
+                self._image_warp_func[camera] = self._image_warp_func[camera].update(**kwargs)
+        else:
+            for camera in self._image_warp_func: # one set of parameters for each cameras
+                self._image_warp_func[camera] = self._image_warp_func[camera].update(**kwargs[camera])
+
+        self._image_warp_func
+
+    def get_vision_obs(self):
+        imgs =  super().get_vision_obs()
+
+        for camera, img in imgs.items():
+            imgs[camera] = self._image_warp_func[camera](img)
+        
+        return imgs
 
 class LogPolarVision(EditVision):
     """
@@ -158,7 +217,38 @@ class LogPolarVision(EditVision):
 
     Optionally can return the cartesian reprojection of the logpolar image.
     """
-    pass
+    def __init__(self, env, camera_parameters):
+        """
+        Args:
+            env: The environment to which this module should be attached
+            camera_parameters: A dictionary containing the configuration.
+                max_radius: The maximum radius of the logpolar image. If not provided,
+                    the minimum of the width and height of the image will be used.
+                return_cartesian: Whether to return the cartesian reprojection of the logpolar image.
+        """
+
+        # see  https://docs.opencv.org/4.x/da/d54/group__imgproc__transform.html#ga49481ab24fdaa0ffa4d3e63d14c0d5e4
+
+        import cv2 as cv
+
+        for camera, params in camera_parameters.items():
+            max_radius = params.get("maxRadius", min(params["width"] / 2, params["height"] / 2))
+            log_fraction = params.get("logFraction", 1)
+            
+            params.update(
+                dict(
+                    warp_function=cv.warpPolar,
+                    warp_function_args=dict(
+                        maxRadius=max_radius,
+                        dsize=(int(params["width"]*log_fraction), params["height"]),
+                        center=(params["width"] / 2, params["height"] / 2),
+                        flags=cv.INTER_LINEAR + cv.WARP_FILL_OUTLIERS + cv.WARP_POLAR_LOG
+                    ) # arguments to be passed to the function
+                )
+            )
+
+        super().__init__(env, camera_parameters)
+
 
 class IncreasingActuityVision(EditVision):
     """

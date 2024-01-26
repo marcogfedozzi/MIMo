@@ -143,7 +143,6 @@ DEFAULT_TOUCH_PARAMS_V2 = {
 :meta hide-value:
 """
 
-
 DEFAULT_VISION_PARAMS = {
     "eye_left": {"width": 256, "height": 256},
     "eye_right": {"width": 256, "height": 256},
@@ -301,7 +300,8 @@ class MIMoEnv(MujocoEnv, utils.EzPickle):
                  vestibular_params=None,
                  actuation_model=SpringDamperModel,
                  goals_in_observation=True,
-                 done_active=False):
+                 done_active=False,
+                 ):
         utils.EzPickle.__init__(**locals())
 
         #self.fullpath = os.path.abspath(model_path)
@@ -349,6 +349,7 @@ class MIMoEnv(MujocoEnv, utils.EzPickle):
 
         self.goal = self.sample_goal()
         self._set_observation_space()
+
 
     def _initialize_simulation(self,):
         super()._initialize_simulation()
@@ -511,7 +512,7 @@ class MIMoEnv(MujocoEnv, utils.EzPickle):
             vision_params (dict): The parameter dictionary.
         """
         self.vision = SimpleVision(self, vision_params)
-
+        
     def vestibular_setup(self, vestibular_params):
         """ Perform the setup and initialization of the vestibular system.
 

@@ -19,8 +19,8 @@ register(id='MIMoShowroom-v0',
                  },
          )
 
-register(id='MIMoMocapGaze-v0',
-         entry_point='mimoEnv.envs:MIMoSelfBodyEnv',
+register(id='MIMoCustom-v0',
+         entry_point='mimoEnv.envs:MIMoCustomEnv',
          max_episode_steps=500,
          kwargs={"model_path": DEMO_XML,
                  "render_mode": "human",

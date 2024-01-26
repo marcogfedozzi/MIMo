@@ -13,7 +13,17 @@
         <global offwidth="800" offheight="800"/>
     </visual>
 
+    
+
     <default>
+
+        <default class="scene">
+			<geom condim="6" friction="1 0.005 0.0002" solimp="0.9995 0.9999 0.001 0.5 1" solref="0.005 1"/>
+			<default class="scene:bouncy">
+				<geom solimp="0.99 0.995 0.001 0.5 2" solref="-20000 -20"/>
+			</default>
+		</default>
+
         <geom material="matgeom" condim="3" solimp="0.95 0.99 0.001 0.5 1" solref="0.005 1"/>
     </default>
 
@@ -30,6 +40,12 @@
         <material name="matgeom" texture="texgeom" texuniform="true" rgba="0.8 0.6 .4 1"/>
 		
 		<material name="matmocap" texture="texgeom" texuniform="true" rgba="0.5 0 0.5 0.5"/>
+
+		<material name="red" rgba="0.8 0 0 1" specular=".2" shininess=".8"/>
+		<material name="green" rgba="0 0.8 0 1" specular=".2" shininess=".8"/>
+		<material name="blue" rgba="0.15 0.15 1 1" specular=".2" shininess=".8"/>
+		<material name="yellow" rgba="0.7 0.7 0 1" specular=".2" shininess=".8"/>
+		<material name="orange" rgba="0.9 0.4 0 1" specular=".2" shininess=".8"/>
     </asset>
 	
 	<!-- Import everything except the kinematic tree -->
@@ -52,11 +68,44 @@
 		</body>
 		
 		<!--body mocap="true" name="mocap" pos="1 0 0.4"-->
-		<body mocap="true" name="mocap" pos="1 0 0.4">
+		<!--body mocap="true" name="mocap" pos="1 0 0.4">
             <geom conaffinity="0" contype="0" pos="0 0 0" rgba="0 0.5 0 0.7" size="0.05 0.05 0.05" type="box"></geom>
             <geom conaffinity="0" contype="0" pos="1 0 0" rgba="1 0 0 0.1" size="1 0.005 0.005" type="box"></geom>
             <geom conaffinity="0" contype="0" pos="0 1 0" rgba="0 1 0 0.1" size="0.005 1 0.001" type="box"></geom>
             <geom conaffinity="0" contype="0" pos="0 0 1" rgba="0 0 1 0.1" size="0.005 0.005 1" type="box"></geom>
+		</body-->
+
+        <!-- Loose Objects -->
+
+        
+		<body name="red_cube" pos=".3 0.05 0.3">
+			<!--freejoint/ -->
+			<geom class="scene" type="box" material="red" size="0.03 0.03 0.03" pos="0 0 0" density="200"/>
+		</body>
+		
+		<body name="yellow_cube" pos=".5 0.05 0.35" euler="0 0 10">
+			<!--freejoint/ -->
+			<geom class="scene" type="box" material="yellow" size="0.03 0.03 0.03" pos="0 0 0" density="200"/>
+		</body>
+		
+		<body name="blue_cube" pos=".31 0.0 0.6" euler="0 0 15">
+			<freejoint/>
+			<geom class="scene" type="box" material="blue" size="0.02 0.02 0.02" pos="0 0 0" density="200"/>
+		</body>
+		
+		<body name="green_sphere" pos=".3 -0.2 0.7">
+			<freejoint/>
+			<geom class="scene:bouncy" type="sphere" material="green" size="0.025" pos="0 0 0" density="200"/>
+		</body>
+		
+		<body name="blue_sphere" pos=".2 -0.1 0.5">
+			<freejoint/>
+			<geom class="scene:bouncy" type="sphere" material="blue" size="0.02" pos="0 0 0" density="200"/>
+		</body>
+		
+		<body name="orange_sphere" pos=".2 0.1 0.5">
+			<freejoint/>
+			<geom class="scene:bouncy" type="sphere" material="orange" size="0.015" pos="0 0 0" density="200"/>
 		</body>
 
 	
