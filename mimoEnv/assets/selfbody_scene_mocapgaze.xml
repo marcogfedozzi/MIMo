@@ -58,8 +58,8 @@
     <worldbody>
         <geom name="floor" pos="0 0 0" size="0 0 .25" type="plane" material="matplane" condim="3"/>
 
-        <light directional="false" diffuse=".4 .4 .4" specular="0 0 0" pos="0 0 10" dir="0 0 -1" castshadow="false"/>
-        <light mode="targetbodycom" target="upper_body" directional="false" diffuse=".8 .8 .8" specular="0.3 0.3 0.3" pos="0 0 5.0" dir="0 0 -1"/>
+        <light directional="false" diffuse=".7 .7 .7" specular="0 0 0" pos="-1 0 5" dir="0 0 -1" castshadow="false"/>
+        <light mode="targetbodycom" target="upper_body" directional="false" diffuse=".4 .4 .4" specular="0.3 0.3 0.3" pos="0.2 0 3.0" dir="0 0 -1"/>
 	
 		<!-- The location and orientation of the base model can be set using this body -->
 		<body name="mimo_location" pos="0.0579584 -0.00157173 0.0566738" quat="0.892294 -0.0284863 -0.450353 -0.0135029">
@@ -75,30 +75,53 @@
             <geom conaffinity="0" contype="0" pos="0 0 1" rgba="0 0 1 0.1" size="0.005 0.005 1" type="box"></geom>
 		</body-->
 
-        <!-- Loose Objects -->
+		<!-- Static -->
 
-        
-		<body name="red_cube" pos=".3 0.05 0.3">
-			<!--freejoint/ -->
+		<!-- Red Ball is used to test visual acuity -->
+		<body name="red_ball" pos="1.7 0.08 0.4"> 
+		<!-- expected acuity of an infant is 20/400, aka
+			it should be able to detect a 10mm object at 1.7m distance.
+			Barely visible with sigma=1 gaussian blur
+		 -->
+			<geom class="scene" type="sphere" material="red" size="0.005" pos="0 0 0" density="200"/>
+		</body>
+
+		<body name="red_cube" pos=".3 0.09 0.25" euler="0 -20 0">
 			<geom class="scene" type="box" material="red" size="0.03 0.03 0.03" pos="0 0 0" density="200"/>
 		</body>
-		
-		<body name="yellow_cube" pos=".5 0.05 0.35" euler="0 0 10">
-			<!--freejoint/ -->
-			<geom class="scene" type="box" material="yellow" size="0.03 0.03 0.03" pos="0 0 0" density="200"/>
+		<body name="green_ball" pos=".27 0.1 0.29">
+			<geom class="scene" type="sphere" material="green" size="0.005 0.005 0.005" pos="0 0 0" density="200"/>
+		</body>
+		<body name="yellow_ball" pos=".27 0.085 0.29">
+			<geom class="scene" type="sphere" material="yellow" size="0.005 0.00 0.005" pos="0 0 0" density="200"/>
 		</body>
 		
-		<body name="blue_cube" pos=".31 0.0 0.6" euler="0 0 15">
+		<body name="green_cube" pos=".31 0.025 0.3" euler="0 -10 0">
+			<geom class="scene" type="box" material="green" size="0.03 0.02 0.03" pos="0 0 0" density="200"/>
+		</body>
+		
+		<body name="yellow_cube" pos=".5 0.065 0.4" euler="0 30 -10">
+			<geom class="scene" type="box" material="yellow" size="0.03 0.03 0.03" pos="0 0 0" density="200"/>
+		</body>
+
+		<body name="blue_cube" pos=".45 0.02 0.38" euler="0 15 10">
+			<geom class="scene" type="box" material="blue" size="0.02 0.03 0.02" pos="0 0 0" density="200"/>
+		</body>
+
+
+        <!-- Loose Objects -->
+		
+		<body name="blue_cube_move" pos=".31 0.0 0.6" euler="0 0 15">
 			<freejoint/>
 			<geom class="scene" type="box" material="blue" size="0.02 0.02 0.02" pos="0 0 0" density="200"/>
 		</body>
 		
-		<body name="green_sphere" pos=".3 -0.2 0.7">
+		<body name="green_sphere_move" pos=".3 -0.2 0.7">
 			<freejoint/>
 			<geom class="scene:bouncy" type="sphere" material="green" size="0.025" pos="0 0 0" density="200"/>
 		</body>
 		
-		<body name="blue_sphere" pos=".2 -0.1 0.5">
+		<body name="blue_sphere_move" pos=".2 -0.1 0.5">
 			<freejoint/>
 			<geom class="scene:bouncy" type="sphere" material="blue" size="0.02" pos="0 0 0" density="200"/>
 		</body>
