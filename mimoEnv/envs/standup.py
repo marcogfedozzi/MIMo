@@ -18,7 +18,7 @@ defined in :data:`STANDUP_XML`.
 """
 import os
 import numpy as np
-import mujoco
+from dm_control import mujoco
 
 from mimoEnv.envs.mimo_env import MIMoEnv, SCENE_DIRECTORY, DEFAULT_PROPRIOCEPTION_PARAMS, DEFAULT_VESTIBULAR_PARAMS
 from mimoActuation.actuation import SpringDamperModel

@@ -15,7 +15,7 @@ from collections import deque
 from typing import Dict, List, Tuple, Callable
 
 import numpy as np
-import mujoco
+from dm_control import mujoco
 import trimesh
 from trimesh import PointCloud
 from cachetools import cachedmethod, LRUCache
@@ -835,7 +835,7 @@ class TrimeshTouch(Touch):
 
     def __init__(self, env, touch_params):
         super().__init__(env, touch_params=touch_params)
-        self.m_model = self.env.model
+        self.m_model = self.env.model # mujoco.MjModel from dm_control.wrapper
         self.m_data = self.env.data
 
         # for each body, _submeshes stores the individual watertight meshes as a list and '_active_subvertices' stores

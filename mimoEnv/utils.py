@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-import mujoco
+from dm_control import mujoco
 from typing import List, Dict, Tuple
 
 EPS = 1e-10

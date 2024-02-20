@@ -14,7 +14,7 @@ contact with the ball and then a large fixed reward on success.
 import os
 import random
 
-import mujoco
+from dm_control import mujoco
 import numpy as np
 
 from mimoEnv.envs.mimo_env import MIMoEnv, SCENE_DIRECTORY, DEFAULT_PROPRIOCEPTION_PARAMS

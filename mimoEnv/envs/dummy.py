@@ -11,7 +11,7 @@ Finally, there is a demo class for the v2 version of MIMo using five-fingered ha
 
 import os
 import numpy as np
-import mujoco
+from dm_control import mujoco
 
 from mimoEnv.envs.mimo_env import MIMoEnv, SCENE_DIRECTORY, DEFAULT_VISION_PARAMS, DEFAULT_VESTIBULAR_PARAMS, \
     DEFAULT_PROPRIOCEPTION_PARAMS, DEFAULT_TOUCH_PARAMS, DEFAULT_TOUCH_PARAMS_V2

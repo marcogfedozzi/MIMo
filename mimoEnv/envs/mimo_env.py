@@ -5,8 +5,8 @@ are provided as well.
 """
 import os
 import numpy as np
-import mujoco
-from mujoco import MjData, MjModel
+from dm_control import mujoco
+from dm_control.mujoco.wrapper import MjData, MjModel
 import copy
 from typing import Dict, Type
 
@@ -352,7 +352,13 @@ class MIMoEnv(MujocoEnv, utils.EzPickle):
 
 
     def _initialize_simulation(self,):
-        super()._initialize_simulation()
+        self.physics = mujoco.Physics.from_xml_path(self.fullpath)
+
+        self.model = self.physics.model.ptr
+        self.data = self.physics.data.ptr
+        # MjrContext will copy model.vis.global_.off* to con.off*
+        self.model.vis.global_.offwidth = self.width
+        self.model.vis.global_.offheight = self.height
 
         fps = int(np.round(1 / self.dt))
         self.metadata = {
@@ -373,6 +379,7 @@ class MIMoEnv(MujocoEnv, utils.EzPickle):
         self._set_initial_position(self._initial_qpos)
 
         self.actuation_model = self.actuation_model(self, self.mimo_actuators)
+
 
     @property
     def n_actuators(self):
@@ -524,8 +531,8 @@ class MIMoEnv(MujocoEnv, utils.EzPickle):
         self.vestibular = SimpleVestibular(self, vestibular_params)
 
     def _single_mujoco_step(self):
-        mujoco.mj_step(self.model, self.data)
-        mujoco.mj_rnePostConstraint(self.model, self.data)
+        self.physics.step()
+        #mujoco.mj_rnePostConstraint(self.model, self.data) # trigger automatically
 
     def _set_action(self, action):
         """ Set the action for the next step.
