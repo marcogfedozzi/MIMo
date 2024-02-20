@@ -124,7 +124,7 @@
 		
 		<body name="yellow_sphere_move" pos=".2 -0.1 0.5">
 			<freejoint/>
-			<geom class="scene:bouncy" type="sphere" material="yellow_emit" size="0.02" pos="0 0 0" density="200"/>
+			<geom name="geom_ysm" class="scene:bouncy" type="sphere" material="yellow_emit" size="0.02" pos="0 0 0" density="200"/>
 		</body>
 		
 		<body name="orange_sphere" pos=".2 0.1 0.5">
