@@ -88,7 +88,7 @@
 		</body>
 
 		<body name="red_cube" pos=".3 0.09 0.25" euler="0 -20 0">
-			<geom class="scene" type="box" material="red" size="0.03 0.03 0.03" pos="0 0 0" density="200"/>
+			<geom name="geom:red_cube" class="scene" type="box" material="red" size="0.03 0.03 0.03" pos="0 0 0" density="200"/>
 		</body>
 		<body name="green_ball" pos=".27 0.1 0.29">
 			<geom class="scene" type="sphere" material="green" size="0.005 0.005 0.005" pos="0 0 0" density="200"/>
