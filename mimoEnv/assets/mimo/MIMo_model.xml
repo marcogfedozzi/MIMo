@@ -65,7 +65,7 @@
 							<site name="torque_right_wrist" type="sphere" size="0.01" pos="0 0 0" group="4"/>
 							<geom type="box" size=".0281 .01 .0208" mass=".04315" pos=".005 0 .0208"/>
 							<geom type="cylinder" size=".0102 .0278" mass=".01602" pos=".005 0 .0416" euler="0 90 0"/>
-							<site name="eef:right_hand" pos="0 0 .02"/> <!-- center of the palm -->
+							<site name="eef:right_hand" pos="0 -0.01 .02"/> <!-- center of the palm -->
 							<body name="right_fingers" pos="0 0 .0416"> <!-- Finger length is 5.14 cm, 1 cm overlap between palm and fingers -->
 								<joint name="robot:right_fingers" type="hinge" pos="0 0 0" axis="-1 0 0" springref="-40" range="-160 8" stiffness=".017" damping=".018" frictionloss=".0023" armature="0.0001"/>
 								<site name="torque_right_fingers" type="sphere" size="0.01" pos="0 0 0" group="4"/>
@@ -94,6 +94,7 @@
 							<site name="torque_left_wrist" type="sphere" size="0.01" pos="0 0 0" group="4"/>
 							<geom type="box" size=".0281 .01 .0208" mass=".04315" pos=".005 0 .0208"/>
 							<geom type="cylinder" size=".0102 .0278" mass=".01602" pos=".005 0 .0416" euler="0 90 0"/>
+							<site name="eef:left_hand" pos="0 0.01 .02"/> <!-- center of the palm -->
 							<body name="left_fingers" pos="0 0 .0416"> <!-- Finger length is 5.14 cm, 1 cm overlap between palm and fingers -->
 								<joint name="robot:left_fingers" type="hinge" pos="0 0 0" axis="1 0 0" springref="-40" range="-160 8" stiffness=".017" damping=".018" frictionloss=".0023" armature="0.0001"/>
 								<site name="torque_left_fingers" type="sphere" size="0.01" pos="0 0 0" group="4"/>
