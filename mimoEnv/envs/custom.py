@@ -29,10 +29,42 @@ from mimoTouch.touch import TrimeshTouch, Touch
 from mimoVision.vision import SimpleVision, Vision
 from mimoVestibular.vestibular import SimpleVestibular, Vestibular
 from mimoProprioception.proprio import SimpleProprioception, Proprioception
-from mimoEnv.envs.selfbody import TOUCH_PARAMS, SITTING_POSITION, SELFBODY_XML
+from mimoEnv.envs.selfbody import TOUCH_PARAMS
 from mimoEnv.envs.dummy import MIMoDummyEnv
 
 
+SELFBODY_XML = os.path.join(SCENE_DIRECTORY, "explore_scene.xml")
+
+SITTING_POSITION = {
+    "robot:hip_lean1": np.array([0.039088]), "robot:hip_rot1": np.array([0.113112]),
+    "robot:hip_bend1": np.array([0.5323]), "robot:hip_lean2": np.array([0]), "robot:hip_rot2": np.array([0]),
+    "robot:hip_bend2": np.array([0.5323]),
+    "robot:head_swivel": np.array([0]), "robot:head_tilt": np.array([0]), "robot:head_tilt_side": np.array([0]),
+    "robot:left_eye_horizontal": np.array([0]), "robot:left_eye_vertical": np.array([0]),
+    "robot:left_eye_torsional": np.array([0]), "robot:right_eye_horizontal": np.array([0]),
+    "robot:right_eye_vertical": np.array([0]), "robot:right_eye_torsional": np.array([0]),
+    
+    "robot:right_hip1": np.array([-1.51997]), "robot:right_hip2": np.array([-0.397578]),
+    "robot:right_hip3": np.array([0.0976615]), "robot:right_knee": np.array([-1.85479]),
+    "robot:right_foot1": np.array([-0.585865]), "robot:right_foot2": np.array([-0.358165]),
+    "robot:right_foot3": np.array([0]), "robot:right_toes": np.array([0]),
+    "robot:left_hip1": np.array([-1.23961]), "robot:left_hip2": np.array([-0.8901]),
+    "robot:left_hip3": np.array([0.7156]), "robot:left_knee": np.array([-2.531]),
+    "robot:left_foot1": np.array([-0.63562]), "robot:left_foot2": np.array([0.5411]),
+    "robot:left_foot3": np.array([0.366514]), "robot:left_toes": np.array([0.24424]),
+}
+SITTING_POSITION_UNLOCK = {
+    "robot:left_shoulder_horizontal": np.array([0.683242]), "robot:left_shoulder_ad_ab": np.array([0.3747]),
+    "robot:left_shoulder_rotation": np.array([-0.62714]), "robot:left_elbow": np.array([-0.756016]),
+    "robot:left_hand1": np.array([0.28278]), "robot:left_hand2": np.array([0]), "robot:left_hand3": np.array([0]),
+    "robot:left_fingers": np.array([-0.461583]),
+}
+""" Initial position of MIMo. Specifies initial values for all joints.
+We grabbed these values by posing MIMo using the MuJoCo simulate executable and the positional actuator file.
+We need these not just for the initial position but also resetting the position (excluding the right arm) each step.
+
+:meta hide-value:
+"""
 
 class MIMoCustomEnv(MIMoDummyEnv):
     """
@@ -83,6 +115,8 @@ class MIMoCustomEnv(MIMoDummyEnv):
         #  "mimo_location": np.array([0.0579584, -0.00157173, 0.0566738, 0.892294, -0.0284863, -0.450353, -0.0135029]),
         for joint_name in SITTING_POSITION:
             env_utils.lock_joint(self.model, joint_name, joint_angle=SITTING_POSITION[joint_name][0])
+        for joint_name in SITTING_POSITION_UNLOCK:
+            env_utils.set_joint_locking_angle(self.model, joint_name, angle=SITTING_POSITION_UNLOCK[joint_name][0])
         # Let sim settle for a few timesteps to allow weld and locks to settle
         self.do_simulation(np.zeros(self.action_space.shape), 25)
         self.init_sitting_qpos = self.data.qpos.copy()
