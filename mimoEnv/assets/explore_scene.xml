@@ -2,7 +2,7 @@
 
     <compiler inertiafromgeom="true" angle="degree"/>
 
-    <option timestep="0.005" iterations="50" tolerance="1e-10" solver="Newton" jacobian="dense" cone="elliptic" impratio="1.0"/>
+    <option gravity="0 0 0" timestep="0.005" iterations="50" tolerance="1e-10" solver="Newton" jacobian="dense" cone="elliptic" impratio="1.0"/>
 
     <size nconmax="1000" njmax="5000" nstack="10000000"/>
 
@@ -87,7 +87,7 @@
 			<geom class="scene" type="sphere" material="red" size="0.005" pos="0 0 0" density="200"/>
 		</body>
 
-		<body name="red_cube" pos=".3 0.09 0.25" euler="0 -20 0">
+		<body name="red_cube" pos=".4 0.09 0.25" euler="0 -20 0">
 			<geom class="scene" type="box" material="red" size="0.03 0.03 0.03" pos="0 0 0" density="200"/>
 		</body>
 		<body name="green_ball" pos=".27 0.1 0.29">
@@ -97,7 +97,7 @@
 			<geom class="scene" type="sphere" material="yellow" size="0.005 0.00 0.005" pos="0 0 0" density="200"/>
 		</body>
 		
-		<body name="green_cube" pos=".31 0.025 0.3" euler="0 -10 0">
+		<body name="green_cube" pos=".31 -0.025 0.3" euler="0 -10 0">
 			<geom class="scene" type="box" material="green" size="0.03 0.02 0.03" pos="0 0 0" density="200"/>
 		</body>
 		
