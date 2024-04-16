@@ -1,20 +1,4 @@
-""" This module contains a simple experiment where MIMo is tasked with touching parts of his own body.
-
-The scene is empty except for MIMo, who is sitting on the ground. The task is for MIMo to touch a randomized target
-body part with his right arm. MIMo is fixed in the initial sitting position and can only move his right arm.
-Sensory inputs consist of touch and proprioception. Proprioception uses the default settings, but touch excludes
-several body parts and uses a lowered resolution to improve runtime.
-The body part can be any of the geoms constituting MIMo.
-
-MIMos initial position is constant in all episodes. The target body part is randomized. An episode is completed
-successfully if MIMo touches the target body part with his right arm.
-
-The reward structure consists of a large fixed reward for touching the right body part, a shaping reward for touching
-another body part, depending on the distance between the contact and the target body part, and a penalty for each time
-step.
-
-The class with the environment is :class:`~mimoEnv.envs.selfbody.MIMoSelfBodyEnv` while the path to the scene XML is
-defined in :data:`SELFBODY_XML`.
+"""
 """
 
 import os
@@ -71,7 +55,7 @@ SITTING_POSITION_UNLOCK = {
     "robot:right_hand1": np.array([0.157]), "robot:right_hand2": np.array([-0.698]), "robot:right_hand3": np.array([-0.211]),
     "robot:right_fingers": np.array([-0.698]),
 
-    "robot:left_shoulder_horizontal": np.array([1.0]), "robot:left_shoulder_ad_ab": np.array([1.0]),
+    "robot:left_shoulder_horizontal": np.array([1.0]), "robot:left_shoulder_ad_ab": np.array([0.4]),
     "robot:left_shoulder_rotation": np.array([0.0]), 
     "robot:left_elbow": np.array([-0.349]),
     "robot:left_hand1": np.array([-0.349]), "robot:left_hand2": np.array([0]), "robot:left_hand3": np.array([0]),

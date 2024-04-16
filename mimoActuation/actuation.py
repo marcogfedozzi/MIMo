@@ -55,6 +55,12 @@ class ActuationModel:
         self.n_actuators = self.actuators.shape[0]
         self.action_space = self.get_action_space()
 
+        # indexes of the DOFs that are actuated (go from nv to nu space)
+        self.actuated_dofs = []
+        for i in self.actuators:
+            joint_id = self.env.model.actuator(i).trnid[0]
+            self.actuated_dofs.append(self.env.model.joint(joint_id).dofadr[0])
+
     def get_action_space(self):
         """ Determines the actuation space attribute for the gym environment.
 
@@ -183,9 +189,11 @@ class SpringDamperModel(ActuationModel):
         Returns:
             np.ndarray: An array with applied torques for each motor.
         """
-        actuator_gear = self.env.model.actuator_gear[self.actuators, 0]
-        control_input = self.env.data.ctrl[self.actuators]
-        return actuator_gear * control_input
+        #actuator_gear = self.env.model.actuator_gear[self.actuators, 0]
+        #control_input = self.env.data.ctrl[self.actuators]
+        #return actuator_gear * control_input
+
+        return self.env.data.qfrc_actuator[self.actuated_dofs]
 
     def reset(self):
         """ Reset actuation model to the initial state.
