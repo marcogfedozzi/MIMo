@@ -36,9 +36,9 @@ SITTING_POSITION = {
     "robot:left_foot3": np.array([-0.033]), "robot:left_toes": np.array([0.0]),
     
 
-    #"robot:left_shoulder_horizontal": np.array([1.2]), "robot:left_shoulder_ad_ab": np.array([0.4]),
-    #"robot:left_shoulder_rotation": np.array([-1.0]), 
-    #"robot:left_elbow": np.array([-0.8]),
+    "robot:left_shoulder_horizontal": np.array([1.2]), "robot:left_shoulder_ad_ab": np.array([0.8]),
+    "robot:left_shoulder_rotation": np.array([-1.0]), 
+    "robot:left_elbow": np.array([-0.8]),
 }
 SITTING_POSITION_UNLOCK = {
 
@@ -55,9 +55,9 @@ SITTING_POSITION_UNLOCK = {
     "robot:right_hand1": np.array([0.157]), "robot:right_hand2": np.array([-0.698]), "robot:right_hand3": np.array([-0.211]),
     "robot:right_fingers": np.array([-0.698]),
 
-    "robot:left_shoulder_horizontal": np.array([1.0]), "robot:left_shoulder_ad_ab": np.array([0.4]),
-    "robot:left_shoulder_rotation": np.array([0.0]), 
-    "robot:left_elbow": np.array([-0.349]),
+    #"robot:left_shoulder_horizontal": np.array([1.0]), "robot:left_shoulder_ad_ab": np.array([0.4]),
+    #"robot:left_shoulder_rotation": np.array([0.0]), 
+    #"robot:left_elbow": np.array([-0.349]),
     "robot:left_hand1": np.array([-0.349]), "robot:left_hand2": np.array([0]), "robot:left_hand3": np.array([0]),
     "robot:left_fingers": np.array([-0.698]),
 }

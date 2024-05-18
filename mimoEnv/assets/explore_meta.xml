@@ -8,7 +8,7 @@
 		<default class="mimo">
         	<joint limited="true" damping=".1" stiffness=".1" armature="0.001" solimplimit="0.98 0.99 0.001 .5 1" solreflimit="0.02 1"/>
         	<geom condim="3" material="skin" friction="1 0.005 0.0002" solimp="0.95 0.99 0.001 0.5 1" solref="0.005 1"/>
-        	<intvelocity ctrlrange="-1 1" ctrllimited="true" forcelimited="true" actrange="-1.57 1.57" kp="50.0"/>
+        	<intvelocity ctrlrange="-10 10" ctrllimited="true" forcelimited="true" actrange="-1.57 1.57" kp="10.0"/>
         	<!--velocity forcelimited="true" kv='100'/--> <!-- inheritrange sets actrange to the range of the joints acted upon, to avoid integrating beyond the joint limits -->
 		</default>
     </default>
@@ -47,6 +47,16 @@
 		<pair geom1="lb" geom2="ub1" condim="1"/>
 		<exclude body1="left_eye" body2="upper_body"/>
 		<exclude body1="right_eye" body2="upper_body"/>
+
+		<exclude body1="right_hand" body2="lower_body"/>
+		<exclude body1="right_fingers" body2="lower_body"/>
+		<exclude body1="left_hand" body2="lower_body"/>
+		<exclude body1="left_fingers" body2="lower_body"/>
+
+		<exclude body1="right_hand" body2="right_upper_leg"/>
+		<exclude body1="right_fingers" body2="right_upper_leg"/>
+		<exclude body1="left_hand" body2="left_upper_leg"/>
+		<exclude body1="left_fingers" body2="left_upper_leg"/>
 	</contact>
 	
 	<tendon>
