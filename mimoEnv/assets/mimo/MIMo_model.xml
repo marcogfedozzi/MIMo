@@ -29,7 +29,7 @@
 					<joint name="robot:head_swivel" type="hinge" pos="0 0 0" axis="0 0 1" range="-111 111" stiffness=".23" damping=".29" frictionloss=".018" armature="0.005"/>
 					<joint name="robot:head_tilt" type="hinge" pos="0 0 0.0123" axis="0 1 0" range="-70 81" stiffness=".45" damping=".53" frictionloss=".018" armature="0.005"/>
 					<joint name="robot:head_tilt_side" type="hinge" pos="0 0 0.0245" axis="1 0 0" range="-70 70" stiffness=".37" damping=".29" frictionloss=".018" armature="0.005"/>
-					<body name="eef:head" pos=".0 0.0 .067375" /> <!-- inbetween eyes, z pointing forward -->
+					<body name="eef:head" pos=".05 0.0 .067375" /> <!-- inbetween eyes, z pointing forward -->
 					
 
 					<body name="left_eye" pos=".07 .0245 .067375">

@@ -91,6 +91,10 @@
 		<body name="red_cube" pos=".2 0.03 0.2" euler="0 -20 0">
 			<geom class="scene" type="box" material="red" size="0.03 0.03 0.03" pos="0 0 0" density="200"/>
 		</body>
+		
+		<body name="side_cube" pos=".05 -0.3 0.3" euler="0 -20 0">
+			<geom class="scene" type="box" material="red" size="0.02 0.02 0.02" pos="0 0 0" density="200"/>
+		</body>
 		<!--body name="green_ball" pos=".27 0.01 0.34">
 			<geom class="scene" type="sphere" material="green" size="0.005 0.005 0.005" pos="0 0 0" density="200"/>
 		</body>
@@ -100,7 +104,7 @@
 		
 		<!--body name="green_cube" pos=".27 -0.025 0.3" euler="0 -10 0"-->
 
-		<body name="green_sphere_obstacle" pos=".12 0.04 0.17" euler="0 -10 0">
+		<body name="green_sphere_obstacle" pos=".12 0.03 0.17" euler="0 -10 0">
 			<geom class="scene" type="sphere" material="green" size="0.01" pos="0 0 0" density="200"/>
 		</body>
 
