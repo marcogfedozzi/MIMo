@@ -301,6 +301,7 @@ class MIMoEnv(MujocoEnv, utils.EzPickle):
                  actuation_model=SpringDamperModel,
                  goals_in_observation=True,
                  done_active=False,
+                 init_empty_siimulation_steps=25
                  ):
         utils.EzPickle.__init__(**locals())
 
@@ -344,6 +345,9 @@ class MIMoEnv(MujocoEnv, utils.EzPickle):
                          camera_id=camera_id,
                          camera_name=camera_name,
                          default_camera_config=default_camera_config)
+        
+        self.do_simulation(np.zeros(self.action_space.shape), init_empty_siimulation_steps)
+
 
         self._env_setup()
 

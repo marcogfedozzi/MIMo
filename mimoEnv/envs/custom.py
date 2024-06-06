@@ -13,11 +13,27 @@ from mimoTouch.touch import TrimeshTouch, Touch
 from mimoVision.vision import SimpleVision, Vision
 from mimoVestibular.vestibular import SimpleVestibular, Vestibular
 from mimoProprioception.proprio import SimpleProprioception, Proprioception
-from mimoEnv.envs.selfbody import TOUCH_PARAMS
 from mimoEnv.envs.dummy import MIMoDummyEnv
 
 
 SELFBODY_XML = os.path.join(SCENE_DIRECTORY, "explore_scene.xml")
+
+
+TOUCH_PARAMS = {
+    "scales": {
+        "upper_body": 0.1,
+        "head": 0.1,
+        "left_upper_arm": 0.05,
+        "left_lower_arm": 0.05,
+        "right_hand": 0.01,
+        "left_hand": 0.01,
+        "right_fingers": 0.01,
+        "left_fingers": 0.01
+    },
+    "touch_function": "force_vector",
+    "response_function": "spread_linear",
+}
+""" List of possible target bodies."""
 
 SITTING_POSITION = {
     "robot:hip_bend1": np.array([0.533]),
@@ -120,7 +136,6 @@ class MIMoCustomEnv(MIMoDummyEnv):
         for joint_name in SITTING_POSITION_UNLOCK:
             env_utils.set_joint_locking_angle(self.model, joint_name, angle=SITTING_POSITION_UNLOCK[joint_name][0])
         # Let sim settle for a few timesteps to allow weld and locks to settle
-        self.do_simulation(np.zeros(self.action_space.shape), 25)
         self.init_sitting_qpos = self.data.qpos.copy()
         
 
@@ -165,3 +180,5 @@ class MIMoCustomEnv(MIMoDummyEnv):
             vestibular_params (dict): The parameter dictionary.
         """
         self.vestibular = self._VestibularClass(self, vestibular_params)
+
+    
