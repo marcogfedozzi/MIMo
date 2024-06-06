@@ -1671,7 +1671,7 @@ class TrimeshTouch(Touch):
     # =================================================================================
 
     # Plot sensor points for single geom
-    def plot_sensors_body(self, body_id=None, body_name=None, title=""):
+    def plot_sensors_body(self, body_id=None, body_name=None, title="", fig=None, ax=None):
         """ Plots the sensor positions for a body.
 
         Given either an ID or the name of a body, plot the positions of the sensors on that body.
@@ -1686,10 +1686,10 @@ class TrimeshTouch(Touch):
         points = self.meshes[body_id].vertices
         limit = self.plotting_limits[body_id]
         title = self.m_model.body(body_id).name
-        env_utils.plot_points(points, limit=limit, title=title)
+        env_utils.plot_points(points, limit=limit, title=title, fig=fig, ax=ax)
 
     # Plot forces for single body
-    def plot_force_body(self, body_id=None, body_name=None, title=""):
+    def plot_force_body(self, body_id=None, body_name=None, title="", fig=None, ax=None):
         """ Plot the sensor output for a body.
 
         Given either an ID or the name of a body, plots the positions and outputs of the sensors on that body.
@@ -1711,12 +1711,12 @@ class TrimeshTouch(Touch):
             normals = self.meshes[body_id].vertex_normals[self.active_vertices[body_id], :]
             force_vectors = force_vectors * normals
         fig, ax = env_utils.plot_forces(sensor_points, force_vectors, limit=np.amax(sensor_points)*1.2, title=title,
-                                        show=False)
+                                        show=False, fig=fig, ax=ax)
         return fig, ax
 
     # Plot forces for list of bodies.
     def plot_force_bodies(self, body_ids=[], body_names=[],
-                          title="", focus="world", show_contact_points=True):
+                          title="", focus="world", show_contact_points=True, fig=None, ax=None):
         """ Plot the sensor output for a list of bodies.
 
         Given a list of bodies, either by ID or by name, plot the positions and outputs of all sensors on the bodies.
@@ -1765,7 +1765,7 @@ class TrimeshTouch(Touch):
         points = np.concatenate(points)
         forces = np.concatenate(forces)
         limit = np.amax(np.abs(points))*1.2
-        fig, ax = env_utils.plot_forces(points=points, vectors=forces, limit=limit, title=title, show=False)
+        fig, ax = env_utils.plot_forces(points=points, vectors=forces, limit=limit, title=title, show=False, fig=fig, ax=ax)
 
         if show_contact_points:
             for contact_id, contact_body_id, forces in self.contact_tuples:
@@ -1784,7 +1784,7 @@ class TrimeshTouch(Touch):
                                color="y", s=15, depthshade=True, alpha=0.8)
         return fig, ax
 
-    def plot_force_body_subtree(self, body_id=None, body_name=None, title="", show_contact_points=False):
+    def plot_force_body_subtree(self, body_id=None, body_name=None, title="", show_contact_points=False, fig=None, ax=None):
         """ Plot the sensor output for the kinematic subtree with the given body at its root.
 
         Given a body, collects all descendant bodies in the kinematic tree and  plot the positions and outputs of their
@@ -1806,11 +1806,11 @@ class TrimeshTouch(Touch):
         # Go through all bodies and note their child bodies
         subtree = env_utils.get_child_bodies(self.m_model, body_id)
         fig, ax = self.plot_force_bodies(body_ids=subtree, title=title, focus="world",
-                                         show_contact_points=show_contact_points)
+                                         show_contact_points=show_contact_points, fig=fig, ax=ax)
         return fig, ax
 
     def visualize_contacts_subtree(self, root_id=None, root_name=None, show_contact_points=False, focus_body=None,
-                                   camera_offset=None):
+                                   camera_offset=None, fig=None, ax=None):
         """ Generates a neat visualization of parts of MIMo and their contact forces.
 
         Starting from a root body, renders the child parts of MIMo and the contact sensors on them. Contact forces are
@@ -1893,8 +1893,12 @@ class TrimeshTouch(Touch):
         ys_red = points_red[:, 1] - target_pos[1] + camera_offset[1]
         zs_red = points_red[:, 2] - target_pos[2] + camera_offset[2]
 
-        fig = plt.figure(figsize=(5, 5), dpi=200)
-        ax = fig.add_subplot(111, projection='3d')
+        if fig is None or ax is None:
+            fig = plt.figure(figsize=(5, 5), dpi=200)
+            ax = fig.add_subplot(111, projection='3d')
+        else:
+            ax.clear()
+
         # Draw sensor points
         ax.scatter(xs_gray, ys_gray, zs_gray, color="k", s=15, depthshade=False, alpha=.15)
         ax.scatter(xs_red, ys_red, zs_red, color=red_colors, s=sizes, depthshade=False)

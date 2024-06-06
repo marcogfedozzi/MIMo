@@ -668,7 +668,7 @@ def body_rot_to_body(mujoco_data, vector, body_id_source, body_id_target):
 # ======================== Plotting utils =========================================
 # =================================================================================
 
-def plot_points(points, limit=1.0, title="", show=True):
+def plot_points(points, limit=1.0, title="", show=True, fig=None, ax=None):
     """ Plots an array of points.
 
     Args:
@@ -685,9 +685,13 @@ def plot_points(points, limit=1.0, title="", show=True):
     xs = points[:, 0]
     ys = points[:, 1]
     zs = points[:, 2]
-    fig = plt.figure()
 
-    ax = fig.add_subplot(111, projection='3d')
+    if fig is None or ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+    else:
+        ax.clear()
+
     ax.scatter(xs, ys, zs, color="k", s=20)
     ax.set_title(title)
     ax.set_xlim([-limit, limit])
@@ -701,7 +705,7 @@ def plot_points(points, limit=1.0, title="", show=True):
         return fig, ax
 
 
-def plot_forces(points, vectors, limit=1.0, title="", show=True):
+def plot_forces(points, vectors, limit=1.0, title="", show=True, fig=None, ax=None):
     """ Plots an array of points and vectors pointing from those points.
 
     The arrays `points` and `vectors` must have the same shape. For each point there is a vector, plotted as arrows,
@@ -727,8 +731,13 @@ def plot_forces(points, vectors, limit=1.0, title="", show=True):
     vs = vectors[:, 1]
     ws = vectors[:, 2]
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+
+    if fig is None or ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+    else:
+        ax.clear()
+
     ax.quiver(xs, ys, zs, us, vs, ws)
     ax.scatter(xs, ys, zs, color="k", s=10, depthshade=True, alpha=0.4)
     ax.set_title(title)
