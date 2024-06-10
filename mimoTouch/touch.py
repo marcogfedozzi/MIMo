@@ -1871,18 +1871,27 @@ class TrimeshTouch(Touch):
         forces = np.concatenate(contact_magnitudes)
         size_min = 10
         size_max = 80
-        sizes = forces / np.amax(forces) * (size_max - size_min) + size_min
+        if len(forces) == 0:
+            sizes = size_min
+        else:
+            sizes = forces / np.amax(forces) * (size_max - size_min) + size_min
         opacity_min = 0.4
         opacity_max = 0.8
-        opacities = forces / np.amax(forces) * (opacity_max - opacity_min) + opacity_min
+        if len(forces) == 0:
+            opacities = opacity_min
+        else:
+            opacities = forces / np.amax(forces) * (opacity_max - opacity_min) + opacity_min
         # Opacities can't be set as an array, so must be set using color array
         red_colors = np.tile(np.array([1.0, 0, 0, 0]), (points_red.shape[0], 1))
         red_colors[:, 3] = opacities
 
         if focus_body:
-            target_pos = self.m_data.get_body_xpos(focus_body)
+            target_pos = self.m_data.body(focus_body).xpos
         else:
             target_pos = np.zeros((3,))
+        
+        camera_offset = np.zeros((3,)) if camera_offset is None else camera_offset
+
 
         # Subtract all by ball position to center on ball
         xs_gray = points_gray[:, 0] - target_pos[0] + camera_offset[0]
