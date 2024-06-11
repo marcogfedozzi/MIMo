@@ -88,7 +88,7 @@
 		</body>
 
 		<!--body name="red_cube" pos=".2 0.2 0.2" euler="0 -20 0"-->
-		<body name="red_sphere" pos=".24 0.027 0.22" euler="0 -20 0">
+		<body name="red_sphere" pos=".22 0.027 0.22" euler="0 -20 0">
 			<geom class="scene" type="sphere" material="red" size="0.03" pos="0 0 0" density="200"/>
 		</body>
 		

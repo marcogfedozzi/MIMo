@@ -48,7 +48,7 @@
 		<exclude body1="left_eye" body2="upper_body"/>
 		<exclude body1="right_eye" body2="upper_body"/>
 
-		<exclude body1="right_hand" body2="lower_body"/>
+		<!--exclude body1="right_hand" body2="lower_body"/>
 		<exclude body1="right_fingers" body2="lower_body"/>
 		<exclude body1="left_hand" body2="lower_body"/>
 		<exclude body1="left_fingers" body2="lower_body"/>
@@ -56,7 +56,7 @@
 		<exclude body1="right_hand" body2="right_upper_leg"/>
 		<exclude body1="right_fingers" body2="right_upper_leg"/>
 		<exclude body1="left_hand" body2="left_upper_leg"/>
-		<exclude body1="left_fingers" body2="left_upper_leg"/>
+		<exclude body1="left_fingers" body2="left_upper_leg"/-->
 	</contact>
 	
 	<tendon>

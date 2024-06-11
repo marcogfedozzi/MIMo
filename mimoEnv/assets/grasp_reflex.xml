@@ -68,10 +68,11 @@
 			<include file="mimo/MIMo_model.xml"></include> <!-- Import the actual model-->
 		</body>
 		
+        <!-- OBJECTS -->
 
 		<body name="red_sphere" pos=".25 0.09 0.3" euler="0 -20 0">
 			<freejoint/>
-			<geom class="scene" type="sphere" material="red" size="0.014" pos="0 0 0" density="1500"/>
+			<geom class="scene" type="sphere" material="red" size="0.023" pos="0 0 0" density="1500"/>
 		</body>
     </worldbody>
     
