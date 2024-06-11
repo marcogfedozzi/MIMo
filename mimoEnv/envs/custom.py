@@ -51,10 +51,9 @@ SITTING_POSITION = {
     "robot:left_foot1": np.array([-0.468]), "robot:left_foot2": np.array([0.03]),
     "robot:left_foot3": np.array([-0.033]), "robot:left_toes": np.array([0.0]),
     
-
-    # "robot:left_shoulder_horizontal": np.array([1.2]), "robot:left_shoulder_ad_ab": np.array([0.8]),
-    # "robot:left_shoulder_rotation": np.array([-1.0]), 
-    # "robot:left_elbow": np.array([-0.8]),
+    #"robot:left_shoulder_horizontal": np.array([1.2]), "robot:left_shoulder_ad_ab": np.array([0.8]),
+    #"robot:left_shoulder_rotation": np.array([-1.0]), 
+    #"robot:left_elbow": np.array([-0.8]),
 }
 SITTING_POSITION_UNLOCK = {
 
@@ -131,10 +130,10 @@ class MIMoCustomEnv(MIMoDummyEnv):
                                  "mimo_location",
                                  np.array([0.0579584, -0.00157173, 0.0566738, 0.892294, -0.0284863, -0.450353, -0.0135029]))
         #  "mimo_location": np.array([0.0579584, -0.00157173, 0.0566738, 0.892294, -0.0284863, -0.450353, -0.0135029]),
-        for joint_name in SITTING_POSITION:
-            env_utils.lock_joint(self.model, joint_name, joint_angle=SITTING_POSITION[joint_name][0])
-        for joint_name in SITTING_POSITION_UNLOCK:
-            env_utils.set_joint_locking_angle(self.model, joint_name, angle=SITTING_POSITION_UNLOCK[joint_name][0])
+        for joint_name in initial_qpos:
+            env_utils.lock_joint(self.model, joint_name, joint_angle=initial_qpos[joint_name][0])
+        # for joint_name in SITTING_POSITION_UNLOCK:
+        #     env_utils.set_joint_locking_angle(self.model, joint_name, angle=SITTING_POSITION_UNLOCK[joint_name][0])
         # Let sim settle for a few timesteps to allow weld and locks to settle
         self.init_sitting_qpos = self.data.qpos.copy()
         
