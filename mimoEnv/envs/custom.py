@@ -85,6 +85,105 @@ TOUCH_PARAMS_V2 = {
 }
 """ List of possible target bodies."""
 
+CLOSED_HAND = {
+    "robot:left_fingers": np.deg2rad(-160),
+}
+
+OPEN_HAND = {
+    "robot:left_fingers": np.deg2rad(5),
+}
+
+REST_HAND = {
+    "robot:left_fingers": np.deg2rad(-20),
+}
+
+CLOSED_HAND_V2 = {
+    "robot:left_ff_side": np.deg2rad(0),
+    "robot:left_ff_knuckle": np.deg2rad(90),
+    "robot:left_ff_middle": np.deg2rad(100),
+    "robot:left_ff_distal": np.deg2rad(80),
+
+    "robot:left_mf_side": np.deg2rad(0),
+    "robot:left_mf_knuckle": np.deg2rad(90),
+    "robot:left_mf_middle": np.deg2rad(100),
+    "robot:left_mf_distal": np.deg2rad(80),
+
+    "robot:left_rf_side": np.deg2rad(0),
+    "robot:left_rf_knuckle": np.deg2rad(90),
+    "robot:left_rf_middle": np.deg2rad(100),
+    "robot:left_rf_distal": np.deg2rad(80),
+
+    "robot:left_lf_meta": np.deg2rad(10),
+    "robot:left_lf_side": np.deg2rad(0),
+    "robot:left_lf_knuckle": np.deg2rad(90),
+    "robot:left_lf_middle": np.deg2rad(100),
+    "robot:left_lf_distal": np.deg2rad(90),
+
+    "robot:left_th_swivel": np.deg2rad(90),
+    "robot:left_th_adduction": np.deg2rad(0),
+    "robot:left_th_pivot": np.deg2rad(-10),
+    "robot:left_th_middle": np.deg2rad(90),
+    "robot:left_th_distal": np.deg2rad(90),
+}
+
+OPEN_HAND_V2 = {
+    "robot:left_ff_side": np.deg2rad(0),
+    "robot:left_ff_knuckle": np.deg2rad(-10),
+    "robot:left_ff_middle": np.deg2rad(5),
+    "robot:left_ff_distal": np.deg2rad(5),
+
+    "robot:left_mf_side": np.deg2rad(0),
+    "robot:left_mf_knuckle": np.deg2rad(-10),
+    "robot:left_mf_middle": np.deg2rad(5),
+    "robot:left_mf_distal": np.deg2rad(5),
+
+    "robot:left_rf_side": np.deg2rad(0),
+    "robot:left_rf_knuckle": np.deg2rad(-10),
+    "robot:left_rf_middle": np.deg2rad(5),
+    "robot:left_rf_distal": np.deg2rad(5),
+
+    "robot:left_lf_meta": np.deg2rad(0),
+    "robot:left_lf_side": np.deg2rad(0),
+    "robot:left_lf_knuckle": np.deg2rad(-10),
+    "robot:left_lf_middle": np.deg2rad(5),
+    "robot:left_lf_distal": np.deg2rad(5),
+
+    "robot:left_th_swivel": np.deg2rad(0),
+    "robot:left_th_adduction": np.deg2rad(0),
+    "robot:left_th_pivot": np.deg2rad(0),
+    "robot:left_th_middle": np.deg2rad(10),
+    "robot:left_th_distal": np.deg2rad(5),
+}
+
+REST_HAND_V2 = {
+    "robot:left_ff_side": np.deg2rad(0),
+    "robot:left_ff_knuckle": np.deg2rad(0),
+    "robot:left_ff_middle": np.deg2rad(0),
+    "robot:left_ff_distal": np.deg2rad(0),
+
+    "robot:left_mf_side": np.deg2rad(0),
+    "robot:left_mf_knuckle": np.deg2rad(0),
+    "robot:left_mf_middle": np.deg2rad(0),
+    "robot:left_mf_distal": np.deg2rad(0),
+
+    "robot:left_rf_side": np.deg2rad(0),
+    "robot:left_rf_knuckle": np.deg2rad(0),
+    "robot:left_rf_middle": np.deg2rad(0),
+    "robot:left_rf_distal": np.deg2rad(0),
+
+    "robot:left_lf_meta": np.deg2rad(0),
+    "robot:left_lf_side": np.deg2rad(0),
+    "robot:left_lf_knuckle": np.deg2rad(0),
+    "robot:left_lf_middle": np.deg2rad(0),
+    "robot:left_lf_distal": np.deg2rad(0),
+
+    "robot:left_th_swivel": np.deg2rad(30),
+    "robot:left_th_adduction": np.deg2rad(-20),
+    "robot:left_th_pivot": np.deg2rad(0),
+    "robot:left_th_middle": np.deg2rad(30),
+    "robot:left_th_distal": np.deg2rad(20),
+}
+
 
 SITTING_POSITION = {
     "robot:hip_bend1": np.array([0.533]),
