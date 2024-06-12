@@ -23,8 +23,8 @@ TOUCH_PARAMS = {
     "scales": {
         "upper_body": 0.1,
         "head": 0.1,
-        "left_upper_arm": 0.05,
-        "left_lower_arm": 0.05,
+        "left_upper_arm": 0.1,
+        "left_lower_arm": 0.1,
         "right_hand": 0.01,
         "left_hand": 0.01,
         "right_fingers": 0.01,
@@ -34,6 +34,57 @@ TOUCH_PARAMS = {
     "response_function": "spread_linear",
 }
 """ List of possible target bodies."""
+
+
+TOUCH_PARAMS_V2 = {
+    "scales": {
+        "upper_body": 0.1,
+        "head": 0.1,
+        "left_upper_arm": 0.1,
+        "left_lower_arm": 0.1,
+        "right_hand": 0.01,
+        "left_hand": 0.01,
+
+        "left_ffknuckle": 0.1,
+        "left_ffmiddle": 0.1,
+        "left_ffdistal": 0.01,
+        "left_mfknuckle": 0.1,
+        "left_mfmiddle": 0.1,
+        "left_mfdistal": 0.01,
+        "left_rfknuckle": 0.1,
+        "left_rfmiddle": 0.1,
+        "left_rfdistal": 0.01,
+        "left_lfmetacarpal": 0.1,
+        "left_lfknuckle": 0.1,
+        "left_lfmiddle": 0.1,
+        "left_lfdistal": 0.01,
+        "left_thbase": 0.1,
+        "left_thhub": 0.1,
+        "left_thdistal": 0.01,
+
+        "right_ffknuckle": 0.1,
+        "right_ffmiddle": 0.1,
+        "right_ffdistal": 0.01,
+        "right_mfknuckle": 0.1,
+        "right_mfmiddle": 0.1,
+        "right_mfdistal": 0.01,
+        "right_rfknuckle": 0.1,
+        "right_rfmiddle": 0.1,
+        "right_rfdistal": 0.01,
+        "right_lfmetacarpal": 0.1,
+        "right_lfknuckle": 0.1,
+        "right_lfmiddle": 0.1,
+        "right_lfdistal": 0.01,
+        "right_thbase": 0.1,
+        "right_thhub": 0.1,
+        "right_thdistal": 0.01,
+
+    },
+    "touch_function": "force_vector",
+    "response_function": "spread_linear",
+}
+""" List of possible target bodies."""
+
 
 SITTING_POSITION = {
     "robot:hip_bend1": np.array([0.533]),
