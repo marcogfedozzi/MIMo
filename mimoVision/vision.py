@@ -4,7 +4,7 @@ The interface is defined as an abstract class in :class:`~mimoVision.vision.Visi
 A simple implementation treating each eye as a single camera is in :class:`~mimoVision.vision.SimpleVision`.
 
 """
-
+import mujoco
 import os
 import matplotlib
 from typing import Dict
@@ -150,6 +150,50 @@ class SimpleVision(Vision):
             file_name = camera_name + suffix + ".png"
             matplotlib.image.imsave(os.path.join(
                 directory, file_name), self.sensor_outputs[camera_name], vmin=0.0, vmax=1.0)
+        
+    def get_3D_point(self, x, y, camera_name):
+        """
+        Returns the 3D point in the world coordinates corresponding to the pixel (x, y) in the image of the camera with name camera_name.
+        """
+        
+        
+        old_mode = self.env.render_mode
+        old_cam_name = self.env.camera_name
+        old_cam_id = self.env.camera_id
+
+        if not self.env.mujoco_renderer._viewers.get("rgb_array"):
+            self.env.mujoco_renderer.render(render_mode="rgb_array")
+
+        rgb_viewer = self.env.mujoco_renderer._viewers["rgb_array"]
+
+        old_viewport = rgb_viewer.viewport
+
+        rgb_viewer.viewport = self._viewports[camera_name]
+
+        self.env.render_mode = "rgb_array"
+        self.env.camera_id = None
+        self.env.camera_name = camera_name
+
+        w = rgb_viewer.viewport.width
+        h = rgb_viewer.viewport.height
+
+        point  = np.zeros(3, dtype=np.float64)
+        geomid = np.zeros(1, dtype=np.int32)
+        flexid = np.zeros(1, dtype=np.int32)
+        skinid = np.zeros(1, dtype=np.int32)
+
+        selid = mujoco.mjv_select(self.env.model, self.env.data,  rgb_viewer.vopt,
+            aspectratio=w/h, relx=x/w, rely=y/h,
+            scn=rgb_viewer.scn, selpnt=point, geomid=geomid, skinid=skinid,
+        )
+        
+        self.env.render_mode = old_mode
+        self.env.camera_name = old_cam_name
+        self.env.camera_id = old_cam_id
+        rgb_viewer.viewport = old_viewport
+
+        return selid, point
+
 
 class EditVision(SimpleVision):
     """A class that edits the iamges returned by the cameras before returning them to the environment.
@@ -248,6 +292,10 @@ class LogPolarVision(EditVision):
             )
 
         super().__init__(env, camera_parameters)
+    
+    def get_3D_point(self, d, th, camera_name): 
+        raise NotImplementedError("get_3D_point not implemented for LogPolarVision [need to do the inverse transform (d,th)->(x,y)]")
+        #return super().get_3D_point(x, y, camera_name)
 
 
 class IncreasingActuityVision(EditVision):
