@@ -177,7 +177,7 @@ REST_HAND_V2 = {
     "robot:left_lf_middle": np.deg2rad(0),
     "robot:left_lf_distal": np.deg2rad(0),
 
-    "robot:left_th_swivel": np.deg2rad(30),
+    "robot:left_th_swivel": np.deg2rad(0),
     "robot:left_th_adduction": np.deg2rad(-20),
     "robot:left_th_pivot": np.deg2rad(0),
     "robot:left_th_middle": np.deg2rad(30),
