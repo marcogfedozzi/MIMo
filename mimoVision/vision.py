@@ -273,11 +273,23 @@ class LogPolarVision(EditVision):
 
         # see  https://docs.opencv.org/4.x/da/d54/group__imgproc__transform.html#ga49481ab24fdaa0ffa4d3e63d14c0d5e4
 
-        import cv2 as cv
+        try:
+            cv.__version__
+        except NameError:
+            import cv2 as cv
+
+        self.camera_transform_parameters = {}
 
         for camera, params in camera_parameters.items():
             max_radius = params.get("maxRadius", min(params["width"] / 2, params["height"] / 2))
             log_fraction = params.get("logFraction", 1)
+
+            self.camera_transform_parameters[camera] = {
+                'Klog': params["width"]*log_fraction / np.log(max_radius),
+                'Kangle': params["height"] / (2*np.pi),
+                'xc': params["width"] / 2,
+                'yc': params["height"] / 2,
+            }
             
             params.update(
                 dict(
@@ -290,11 +302,23 @@ class LogPolarVision(EditVision):
                     ) # arguments to be passed to the function
                 )
             )
+        
+        
 
         super().__init__(env, camera_parameters)
     
-    def get_3D_point(self, d, th, camera_name): 
-        raise NotImplementedError("get_3D_point not implemented for LogPolarVision [need to do the inverse transform (d,th)->(x,y)]")
+    def get_3D_point(self, rho, phi, camera_name): 
+        
+        d = np.exp(rho / self.camera_transform_parameters[camera_name]['Klog'])
+        th = phi / self.camera_transform_parameters[camera_name]['Kangle']
+
+        x = d * np.cos(th) + self.camera_transform_parameters[camera_name]['xc']
+        y = d * np.sin(th) + self.camera_transform_parameters[camera_name]['yc']
+
+        return super().get_3D_point(x, y, camera_name)
+
+
+        #raise NotImplementedError("get_3D_point not implemented for LogPolarVision [need to do the inverse transform (d,th)->(x,y)]")
         #return super().get_3D_point(x, y, camera_name)
 
 
