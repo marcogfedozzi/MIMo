@@ -187,19 +187,26 @@ REST_HAND_V2 = {
 
 SITTING_POSITION = {
     "robot:hip_bend1": np.array([0.533]),
-    "robot:hip_lean2": np.array([0.0272]),
-    "robot:hip_rot2": np.array([-0.101]),
+    #"robot:hip_lean2": np.array([0.0272]),
+    #"robot:hip_rot2": np.array([-0.101]),
+    "robot:hip_lean2": np.array([0.0]),
+    "robot:hip_rot2": np.array([0.0]),
     "robot:hip_bend2": np.array([0.519]),
     
-    "robot:right_hip1": np.array([-1.39]), "robot:right_hip2": np.array([-0.891]),
-    "robot:right_hip3": np.array([0.546]), "robot:right_knee": np.array([-2.07]),
-    "robot:right_foot1": np.array([-0.496]), "robot:right_foot2": np.array([0.01]),
-    "robot:right_foot3": np.array([0.048]), "robot:right_toes": np.array([0.01]),
+    #"robot:right_hip1": np.array([-1.39]), "robot:right_hip2": np.array([-0.891]),
+    #"robot:right_hip3": np.array([0.546]), "robot:right_knee": np.array([-2.07]),
+    #"robot:right_foot1": np.array([-0.496]), "robot:right_foot2": np.array([0.01]),
+    #"robot:right_foot3": np.array([0.048]), "robot:right_toes": np.array([0.01]),
 
     "robot:left_hip1": np.array([-0.725]), "robot:left_hip2": np.array([-0.006]),
     "robot:left_hip3": np.array([0.7156]), "robot:left_knee": np.array([-0.352]),
     "robot:left_foot1": np.array([-0.468]), "robot:left_foot2": np.array([0.03]),
     "robot:left_foot3": np.array([-0.033]), "robot:left_toes": np.array([0.0]),
+
+    "robot:right_hip1": np.array([-0.725]),  "robot:right_hip2": np.array([-0.006]),
+    "robot:right_hip3": np.array([0.7156]),  "robot:right_knee": np.array([-0.352]),
+    "robot:right_foot1": np.array([-0.468]), "robot:right_foot2": np.array([0.03]),
+    "robot:right_foot3": np.array([-0.033]), "robot:right_toes": np.array([0.0]),
     
     #"robot:left_shoulder_horizontal": np.array([1.2]), "robot:left_shoulder_ad_ab": np.array([0.8]),
     #"robot:left_shoulder_rotation": np.array([-1.0]), 
@@ -215,10 +222,10 @@ SITTING_POSITION_UNLOCK = {
     "robot:hip_lean1": np.array([0.024]), 
     "robot:hip_rot1": np.array([-0.124]),
 
-    "robot:right_shoulder_horizontal": np.array([1.32]), "robot:right_shoulder_ad_ab": np.array([0.421]),
-    "robot:right_shoulder_rotation": np.array([-1.11]), "robot:right_elbow": np.array([-0.756016]),
-    "robot:right_hand1": np.array([0.157]), "robot:right_hand2": np.array([-0.698]), "robot:right_hand3": np.array([-0.211]),
-    "robot:right_fingers": np.array([-0.698]),
+    #"robot:right_shoulder_horizontal": np.array([1.32]), "robot:right_shoulder_ad_ab": np.array([0.421]),
+    #"robot:right_shoulder_rotation": np.array([-1.11]), "robot:right_elbow": np.array([-0.756016]),
+    #"robot:right_hand1": np.array([0.157]), "robot:right_hand2": np.array([-0.698]), "robot:right_hand3": np.array([-0.211]),
+    #"robot:right_fingers": np.array([-0.698]),
 
     #"robot:left_shoulder_horizontal": np.array([1.0]), "robot:left_shoulder_ad_ab": np.array([0.4]),
     #"robot:left_shoulder_rotation": np.array([0.0]), 
@@ -257,10 +264,10 @@ class MIMoCustomEnv(MIMoDummyEnv):
                  ):
     
 
-        self._ProprioClass = proprio_class
-        self._TouchClass = touch_class
-        self._VisionClass = vision_class
-        self._VestibularClass = vestibular_class
+        self.ProprioClass = proprio_class
+        self.TouchClass = touch_class
+        self.VisionClass = vision_class
+        self.VestibularClass = vestibular_class
 
         super().__init__(model_path=model_path,
                          initial_qpos=initial_qpos,
@@ -282,8 +289,6 @@ class MIMoCustomEnv(MIMoDummyEnv):
         #  "mimo_location": np.array([0.0579584, -0.00157173, 0.0566738, 0.892294, -0.0284863, -0.450353, -0.0135029]),
         for joint_name in initial_qpos:
             env_utils.lock_joint(self.model, joint_name, joint_angle=initial_qpos[joint_name][0])
-        # for joint_name in SITTING_POSITION_UNLOCK:
-        #     env_utils.set_joint_locking_angle(self.model, joint_name, angle=SITTING_POSITION_UNLOCK[joint_name][0])
         # Let sim settle for a few timesteps to allow weld and locks to settle
         self.init_sitting_qpos = self.data.qpos.copy()
         
@@ -298,7 +303,7 @@ class MIMoCustomEnv(MIMoDummyEnv):
         Args:
             proprio_params (dict): The parameter dictionary.
         """
-        self.proprioception = self._ProprioClass(self, proprio_params)
+        self.proprioception = self.ProprioClass(self, proprio_params)
 
     def touch_setup(self, touch_params):
         """ Perform the setup and initialization of the touch system.
@@ -308,7 +313,7 @@ class MIMoCustomEnv(MIMoDummyEnv):
         Args:
             touch_params (dict): The parameter dictionary.
         """
-        self.touch = self._TouchClass(self, touch_params)
+        self.touch = self.TouchClass(self, touch_params)
 
     def vision_setup(self, vision_params):
         """ Perform the setup and initialization of the vision system.
@@ -318,7 +323,7 @@ class MIMoCustomEnv(MIMoDummyEnv):
         Args:
             vision_params (dict): The parameter dictionary.
         """
-        self.vision = self._VisionClass(self, vision_params)
+        self.vision = self.VisionClass(self, vision_params)
 
     def vestibular_setup(self, vestibular_params):
         """ Perform the setup and initialization of the vestibular system.
@@ -328,6 +333,6 @@ class MIMoCustomEnv(MIMoDummyEnv):
         Args:
             vestibular_params (dict): The parameter dictionary.
         """
-        self.vestibular = self._VestibularClass(self, vestibular_params)
+        self.vestibular = self.VestibularClass(self, vestibular_params)
 
     

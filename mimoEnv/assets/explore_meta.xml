@@ -8,7 +8,7 @@
 		<default class="mimo">
         	<joint limited="true" damping=".1" stiffness=".1" armature="0.001" solimplimit="0.98 0.99 0.001 .5 1" solreflimit="0.02 1"/>
         	<geom condim="3" material="skin" friction="1 0.005 0.0002" solimp="0.95 0.99 0.001 0.5 1" solref="0.005 1"/>
-        	<intvelocity ctrlrange="-10 10" ctrllimited="true" forcelimited="true" actrange="-1.57 1.57" kp="1.0"/>
+        	<intvelocity ctrlrange="-10 10" ctrllimited="true" forcelimited="true" actrange="-1.57 1.57" kp="10.0"/>
         	<!--velocity ctrlrange="-10 10" ctrllimited="true" kv='10' forcelimited="true"/--> <!-- inheritrange sets actrange to the range of the joints acted upon, to avoid integrating beyond the joint limits -->
 		</default>
     </default>
