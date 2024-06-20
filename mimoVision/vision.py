@@ -16,6 +16,7 @@ from typing import Callable, Dict
 from numpy import ndarray
 from functools import partial
 
+from numpy.typing import NDArray
 
 
 class Vision:
@@ -156,7 +157,6 @@ class SimpleVision(Vision):
         Returns the 3D point in the world coordinates corresponding to the pixel (x, y) in the image of the camera with name camera_name.
         """
         
-        
         old_mode = self.env.render_mode
         old_cam_name = self.env.camera_name
         old_cam_id = self.env.camera_id
@@ -193,6 +193,83 @@ class SimpleVision(Vision):
         rgb_viewer.viewport = old_viewport
 
         return selid, point
+
+    def get_2d_from_3d(self, point: NDArray, camera_name: str):
+
+        old_mode = self.env.render_mode
+        old_cam_name = self.env.camera_name
+        old_cam_id = self.env.camera_id
+
+        if not self.env.mujoco_renderer._viewers.get("rgb_array"):
+            self.env.mujoco_renderer.render(render_mode="rgb_array")
+
+        rgb_viewer = self.env.mujoco_renderer._viewers["rgb_array"]
+
+        old_viewport = rgb_viewer.viewport
+
+        rgb_viewer.viewport = self._viewports[camera_name]
+
+        self.env.render_mode = "rgb_array"
+        self.env.camera_id = self.env.model.camera(camera_name).id
+        self.env.camera_name = camera_name
+
+        w = rgb_viewer.viewport.width
+        h = rgb_viewer.viewport.height
+
+        
+        point_homogeneus = np.ones(4, dtype=np.float64)
+        point_homogeneus[:3] = point
+
+        m = self._compute_camera_matrix()
+        xs, ys, s = m @ point_homogeneus
+        x = xs / s
+        y = ys / s
+        
+        self.env.render_mode = old_mode
+        self.env.camera_name = old_cam_name
+        self.env.camera_id = old_cam_id
+        rgb_viewer.viewport = old_viewport
+
+        return np.array([x, y], dtype=np.int32)
+
+    
+    def _compute_camera_matrix(self):
+        """Returns the 3x4 camera matrix."""
+        # FROM: https://colab.research.google.com/github/google-deepmind/mujoco/blob/main/python/tutorial.ipynb#scrollTo=sDYwClpxaxab
+        # If the camera is a 'free' camera, we get its position and orientation
+        # from the scene data structure. It is a stereo camera, so we average over
+        # the left and right channels. Note: we call `self.update()` in order to
+        # ensure that the contents of `scene.camera` are correct.
+
+        cam = self.env.mujoco_renderer._viewers["rgb_array"].scn.camera[self.env.camera_id]
+
+        pos = cam.pos
+        z   = -cam.forward
+        y   = cam.up
+        rot = np.vstack((np.cross(y, z), y, z))
+        fov = self.env.model.cam_fovy[self.env.camera_id]
+
+        h = self._viewports[self.env.camera_name].height
+        w = self._viewports[self.env.camera_name].width
+
+        # Translation matrix (4x4).
+        translation = np.eye(4)
+        translation[0:3, 3] = -pos
+
+        # Rotation matrix (4x4).
+        rotation = np.eye(4)
+        rotation[0:3, 0:3] = rot
+
+        # Focal transformation matrix (3x4).
+        focal_scaling = (1./np.tan(np.deg2rad(fov)/2)) * h / 2.0
+        focal = np.diag([-focal_scaling, focal_scaling, 1.0, 0])[0:3, :]
+
+        # Image matrix (3x3).
+        image = np.eye(3)
+        image[0, 2] = (w - 1) / 2.0
+        image[1, 2] = (h - 1) / 2.0
+        return image @ focal @ rotation @ translation
+
 
 
 class EditVision(SimpleVision):
