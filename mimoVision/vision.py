@@ -17,7 +17,7 @@ from numpy import ndarray
 from functools import partial
 
 from numpy.typing import NDArray
-
+from math import floor
 
 class Vision:
     """ Abstract base class for vision.
@@ -213,13 +213,10 @@ class SimpleVision(Vision):
         self.env.camera_id = self.env.model.camera(camera_name).id
         self.env.camera_name = camera_name
 
-        w = rgb_viewer.viewport.width
-        h = rgb_viewer.viewport.height
-
-        
         point_homogeneus = np.ones(4, dtype=np.float64)
         point_homogeneus[:3] = point
 
+        self.env.mujoco_renderer.render(render_mode="rgb_array", camera_name=camera_name)
         m = self._compute_camera_matrix()
         xs, ys, s = m @ point_homogeneus
         x = xs / s
@@ -230,18 +227,34 @@ class SimpleVision(Vision):
         self.env.camera_id = old_cam_id
         rgb_viewer.viewport = old_viewport
 
-        return np.array([x, y], dtype=np.int32)
+
+        
+
+        return np.array([floor(x), floor(y)], dtype=np.int32)
 
     
     def _compute_camera_matrix(self):
         """Returns the 3x4 camera matrix."""
         # FROM: https://colab.research.google.com/github/google-deepmind/mujoco/blob/main/python/tutorial.ipynb#scrollTo=sDYwClpxaxab
         # If the camera is a 'free' camera, we get its position and orientation
-        # from the scene data structure. It is a stereo camera, so we average over
-        # the left and right channels. Note: we call `self.update()` in order to
+        # from the scene data structure. Note: we call `self.update()` in order to
         # ensure that the contents of `scene.camera` are correct.
 
-        cam = self.env.mujoco_renderer._viewers["rgb_array"].scn.camera[self.env.camera_id]
+        rgb_viewer = self.env.mujoco_renderer._viewers["rgb_array"]
+        cam = rgb_viewer.scn.camera[self.env.camera_id]
+
+        #mujoco.mjv_updateScene(
+        #    m=self.env.model,
+        #    d=self.env.data,
+        #    opt=rgb_viewer.vopt,
+        #    pert=mujoco.MjvPerturb(),
+        #    cam=rgb_viewer.cam,
+        #    catmask=mujoco.mjtCatBit.mjCAT_ALL.value,
+        #    scn=rgb_viewer.scn,
+        #)
+
+        #self.env.mujoco_renderer.render(render_mode="rgb_array") # TEST: rerendering to ensure it's the correct camera... I guess?
+
 
         pos = cam.pos
         z   = -cam.forward
@@ -394,9 +407,6 @@ class LogPolarVision(EditVision):
 
         return super().get_3D_point(x, y, camera_name)
 
-
-        #raise NotImplementedError("get_3D_point not implemented for LogPolarVision [need to do the inverse transform (d,th)->(x,y)]")
-        #return super().get_3D_point(x, y, camera_name)
 
 
 class IncreasingActuityVision(EditVision):
