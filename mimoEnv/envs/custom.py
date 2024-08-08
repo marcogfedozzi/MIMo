@@ -85,19 +85,15 @@ TOUCH_PARAMS_V2 = {
 }
 """ List of possible target bodies."""
 
-CLOSED_HAND = {
-    "robot:left_fingers": np.deg2rad(-160),
-}
+L_CLOSED_HAND   = {"robot:left_fingers": np.deg2rad(-160)}
+L_OPEN_HAND     = {"robot:left_fingers": np.deg2rad(5)}
+L_REST_HAND     = {"robot:left_fingers": np.deg2rad(-20)}
 
-OPEN_HAND = {
-    "robot:left_fingers": np.deg2rad(5),
-}
+R_CLOSED_HAND   = {"robot:right_fingers": np.deg2rad(-160)}
+R_OPEN_HAND     = {"robot:right_fingers": np.deg2rad(5)}
+R_REST_HAND     = {"robot:right_fingers": np.deg2rad(-20)}
 
-REST_HAND = {
-    "robot:left_fingers": np.deg2rad(-20),
-}
-
-CLOSED_HAND_V2 = {
+L_CLOSED_HAND_V2 = {
     "robot:left_ff_side": np.deg2rad(0),
     "robot:left_ff_knuckle": np.deg2rad(90),
     "robot:left_ff_middle": np.deg2rad(100),
@@ -126,7 +122,36 @@ CLOSED_HAND_V2 = {
     "robot:left_th_distal": np.deg2rad(90),
 }
 
-OPEN_HAND_V2 = {
+R_CLOSED_HAND_V2 = {
+    "robot:right_ff_side": np.deg2rad(0),
+    "robot:right_ff_knuckle": np.deg2rad(90),
+    "robot:right_ff_middle": np.deg2rad(100),
+    "robot:right_ff_distal": np.deg2rad(80),
+
+    "robot:right_mf_side": np.deg2rad(0),
+    "robot:right_mf_knuckle": np.deg2rad(90),
+    "robot:right_mf_middle": np.deg2rad(100),
+    "robot:right_mf_distal": np.deg2rad(80),
+
+    "robot:right_rf_side": np.deg2rad(0),
+    "robot:right_rf_knuckle": np.deg2rad(90),
+    "robot:right_rf_middle": np.deg2rad(100),
+    "robot:right_rf_distal": np.deg2rad(80),
+
+    "robot:right_lf_meta": np.deg2rad(10),
+    "robot:right_lf_side": np.deg2rad(0),
+    "robot:right_lf_knuckle": np.deg2rad(90),
+    "robot:right_lf_middle": np.deg2rad(100),
+    "robot:right_lf_distal": np.deg2rad(90),
+
+    "robot:right_th_swivel": np.deg2rad(90),
+    "robot:right_th_adduction": np.deg2rad(0),
+    "robot:right_th_pivot": np.deg2rad(-10),
+    "robot:right_th_middle": np.deg2rad(90),
+    "robot:right_th_distal": np.deg2rad(90),
+}
+
+L_OPEN_HAND_V2 = {
     "robot:left_ff_side": np.deg2rad(0),
     "robot:left_ff_knuckle": np.deg2rad(-10),
     "robot:left_ff_middle": np.deg2rad(5),
@@ -154,8 +179,36 @@ OPEN_HAND_V2 = {
     "robot:left_th_middle": np.deg2rad(10),
     "robot:left_th_distal": np.deg2rad(5),
 }
+R_OPEN_HAND_V2 = {
+    "robot:right_ff_side": np.deg2rad(0),
+    "robot:right_ff_knuckle": np.deg2rad(-10),
+    "robot:right_ff_middle": np.deg2rad(5),
+    "robot:right_ff_distal": np.deg2rad(5),
 
-REST_HAND_V2 = {
+    "robot:right_mf_side": np.deg2rad(0),
+    "robot:right_mf_knuckle": np.deg2rad(-10),
+    "robot:right_mf_middle": np.deg2rad(5),
+    "robot:right_mf_distal": np.deg2rad(5),
+
+    "robot:right_rf_side": np.deg2rad(0),
+    "robot:right_rf_knuckle": np.deg2rad(-10),
+    "robot:right_rf_middle": np.deg2rad(5),
+    "robot:right_rf_distal": np.deg2rad(5),
+
+    "robot:right_lf_meta": np.deg2rad(0),
+    "robot:right_lf_side": np.deg2rad(0),
+    "robot:right_lf_knuckle": np.deg2rad(-10),
+    "robot:right_lf_middle": np.deg2rad(5),
+    "robot:right_lf_distal": np.deg2rad(5),
+
+    "robot:right_th_swivel": np.deg2rad(0),
+    "robot:right_th_adduction": np.deg2rad(0),
+    "robot:right_th_pivot": np.deg2rad(0),
+    "robot:right_th_middle": np.deg2rad(10),
+    "robot:right_th_distal": np.deg2rad(5),
+}
+
+L_REST_HAND_V2 = {
     "robot:left_ff_side": np.deg2rad(0),
     "robot:left_ff_knuckle": np.deg2rad(0),
     "robot:left_ff_middle": np.deg2rad(0),
@@ -182,6 +235,35 @@ REST_HAND_V2 = {
     "robot:left_th_pivot": np.deg2rad(0),
     "robot:left_th_middle": np.deg2rad(30),
     "robot:left_th_distal": np.deg2rad(20),
+}
+
+R_REST_HAND_V2 = {
+    "robot:right_ff_side": np.deg2rad(0),
+    "robot:right_ff_knuckle": np.deg2rad(0),
+    "robot:right_ff_middle": np.deg2rad(0),
+    "robot:right_ff_distal": np.deg2rad(0),
+
+    "robot:right_mf_side": np.deg2rad(0),
+    "robot:right_mf_knuckle": np.deg2rad(0),
+    "robot:right_mf_middle": np.deg2rad(0),
+    "robot:right_mf_distal": np.deg2rad(0),
+
+    "robot:right_rf_side": np.deg2rad(0),
+    "robot:right_rf_knuckle": np.deg2rad(0),
+    "robot:right_rf_middle": np.deg2rad(0),
+    "robot:right_rf_distal": np.deg2rad(0),
+
+    "robot:right_lf_meta": np.deg2rad(0),
+    "robot:right_lf_side": np.deg2rad(0),
+    "robot:right_lf_knuckle": np.deg2rad(0),
+    "robot:right_lf_middle": np.deg2rad(0),
+    "robot:right_lf_distal": np.deg2rad(0),
+
+    "robot:right_th_swivel": np.deg2rad(0),
+    "robot:right_th_adduction": np.deg2rad(-20),
+    "robot:right_th_pivot": np.deg2rad(0),
+    "robot:right_th_middle": np.deg2rad(30),
+    "robot:right_th_distal": np.deg2rad(20),
 }
 
 

@@ -71,6 +71,7 @@
 		<!-- Static -->
 
 		<!--body name="red_cube" pos=".2 0.2 0.2" euler="0 -20 0"-->
+		<!--
 		<body name="red_sphere" pos=".22 0.027 0.22" euler="0 -20 0">
 			<geom class="scene" type="sphere" material="red" size="0.03" pos="0 0 0" density="200"/>
 		</body>
@@ -94,10 +95,12 @@
 		<body name="blue_cube" pos=".45 0.02 0.38" euler="0 15 10">
 			<geom class="scene" type="box" material="blue" size="0.02 0.03 0.02" pos="0 0 0" density="200"/>
 		</body>
+		-->
 
 
         <!-- Loose Objects -->
 		
+		<!--
 		<body name="blue_cube_move" pos=".36 0.0 0.6" euler="0 0 15">
 			<freejoint/>
 			<geom class="scene" type="box" material="blue" size="0.02 0.02 0.02" pos="0 0 0" density="200"/>
@@ -118,11 +121,19 @@
 			<geom class="scene:bouncy" type="sphere" material="orange" size="0.015" pos="0 0 0" density="200"/>
 		</body>
 
-		
+		-->
+
 		<!-- Targets -->
 
-		<body name="head_target" mocap="true" pos=".22 0.027 0.22"/>
-		<body name="hand_target" mocap="true" pos=".22 0.027 0.22"/>
+		<body name="head_target" mocap="true" pos=".0 .0 .0">
+			<geom type="sphere" size="0.01" contype="0" conaffinity="0" material="red"/> 
+		</body>
+		<body name="hand_target" mocap="true" pos=".0 .0 .0">
+			<geom type="sphere" size="0.01" contype="0" conaffinity="0" material="green"/> 
+		</body>
+		<body name="hand_target_1" mocap="true" pos=".0 .0 .0">
+			<geom type="sphere" size="0.01" contype="0" conaffinity="0" material="blue"/> 
+		</body>
 	
     </worldbody>
 
