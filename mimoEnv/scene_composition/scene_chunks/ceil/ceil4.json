@@ -1,0 +1,4 @@
+{
+    "texture": {"filename": "ceiling4.png"},
+    "material": {"params": {"specular": 0.0, "shininess": 0.3, "emission": 0.3}}
+}
