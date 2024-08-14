@@ -24,10 +24,13 @@ BASE_DIR = os.path.join(SCENE_DIRECTORY, '..', 'scene_composition')
 TEMPLATE_SCENE_FILE = os.path.join(BASE_DIR, "template_scene.xml")
 OUTPUT_SCENE_FILE   = os.path.join(SCENE_DIRECTORY, "random_explore_scene.xml")
 
-ROOM_SIZE = { # actuaslly half-sizes
-    "min": [1, 1, 1],
-    "max": [2, 2, 2]
+ROOM_SIZE = { # actually half-sizes
+    "min": [1, 1, 0.5],
+    "max": [2, 2, 1]
 }
+
+
+XYAXES = {"left": "1 0 0 0 0 1", "right": "-1 0 0 0 0 1", "front": "0 -1 0 0 0 1", "back": "0 1 0 0 0 1"}
 
 KWDS = {
     "room":{
@@ -55,7 +58,13 @@ KWDS = {
                         "right": "WALLPOS_R",
                         "front": "WALLPOS_F",
                         "back": "WALLPOS_B",
-                    }
+                    },
+                    "xyaxes": {
+                        "left": "WALLXYAXES_L",
+                        "right": "WALLXYAXES_R",
+                        "front": "WALLXYAXES_F",
+                        "back": "WALLXYAXES_B",
+                    } 
             }
         },
         "ceil": {
@@ -69,6 +78,21 @@ KWDS = {
     "lights": {
         "static": {"pos": "LIGHTSPOS"},
         "follow": {"pos": "LIGHTFPOS"},
+    },
+    "deco":
+    {
+        "asset": {
+            "placeholder": "DECOASSET",
+            "texture": {"name": "DECOTEXNAME", "filename":"DECOTEXFILENAME"},
+            "material": {"name": "DECOMATNAME", "params": "DECOMATPARAMS"},
+        },
+        "geom": {
+            "placeholder": "DECOGEOM",
+            "name": "DECOGEOMNAME",
+            "size": "GEOMDECOSIZE",
+            "pos": "GEOMDECOPOS",
+            "xyaxes": "GEOMDECOXYAXES"
+        },
     },
 }
 
@@ -129,6 +153,12 @@ def sample_body_params(room_size):
                 "right": f"0 {-room_size[1]} {room_size[2]}",
                 "front": f"{room_size[0]} 0 {room_size[2]}",
                 "back":  f"{-room_size[0]} 0 {room_size[2]}",
+            },
+            "xyaxes": {
+                "left":  XYAXES["left"],
+                "right": XYAXES["right"],
+                "front": XYAXES["front"],
+                "back":  XYAXES["back"],
             }
         },
         "ceil": {"pos": f"0 0 {2*room_size[2]}"},
@@ -143,6 +173,133 @@ def sample_light_params(room_size):
     y = random.uniform(-room_size[1]/2, room_size[1]/2)
 
     return f"{x} {y} {z}"
+
+def generate_decorations(geom, replacements):
+    # - select the number of decorations Nd
+    # - for Nd
+    #   - select a wall
+    #   - split that wall into 4 regions ul ur bl br
+    #   - assign the decoration to one region, checking first that it’s empty
+    #   - sample the size that goes from min to min(max size, region size)
+    #   - set the region as occupied
+    #   - iterate
+    def load_deco_templates():
+        assetfile = os.path.join(BASE_DIR,  "asset_deco_template.xml")
+        geomfile = os.path.join(BASE_DIR, "geom_deco_template.xml")
+
+        asset_template = ""
+        geom_template = ""
+
+        with open(assetfile, 'r') as file:
+            for line in file:
+                asset_template += line+"\t\t"
+        with open(geomfile, 'r') as file:
+            for line in file:
+                geom_template += line+"\t\t"
+        
+        return asset_template, geom_template
+
+    def sample_regions(sides, regions, N):
+        l = [[s, r] for r in regions for s in sides]
+        random.shuffle(l)
+        return l[:N]
+    
+    def get_region_ext(sides, regions):
+        region_corners = {k: [0.0, 0.0] for w in geom["wall"]["pos"].keys() for k in regions} 
+        region_centers = {k: [0.0, 0.0] for w in geom["wall"]["pos"].keys() for k in regions} 
+        for side in sides:
+
+            wallpos = [float(x) for x in geom["wall"]["pos"][side].split(" ")]
+            wallsize = [float(x) for x in geom["wall"]["size"][side].split(" ")[:2]]
+            
+            d = 1 if side in ["left", "right"] else 0 # non null dimension
+
+            cw, ch = 0, wallpos[2]
+            w,  h  = wallsize[0], wallsize[1] # NOTE: halfdims per MuJoCo convention
+            wr = 0.8*w # region where the decoration can be placed
+            hr = 0.8*h
+
+            # Region corners
+            region_corners["tl"] = [cw - wr, ch + hr]
+            region_corners["tr"] = [cw + wr, ch + hr]
+            region_corners["bl"] = [cw - wr, ch - hr]
+            region_corners["br"] = [cw + wr, ch - hr]
+
+            for reg in regions:
+                region_centers[reg] = [(region_corners[reg][0] + cw)/2, (region_corners[reg][1] + ch)/2]
+
+        return region_corners, region_centers
+    
+    ############################
+    
+    deco_files = os.listdir(os.path.join(BASE_DIR, "scene_chunks", "decoration"))
+    Nd = random.randint(1, len(deco_files))
+
+    # shuffle deco_files
+    random.shuffle(deco_files)
+
+    deco_list = deco_files[:Nd]
+
+    regions = ["tl", "tr", "bl", "br"]
+    sides   = geom["wall"]["pos"].keys()
+
+    sampled_regions = sample_regions(sides, regions, Nd)
+
+    region_corners, region_centers = get_region_ext(sides, regions)
+
+    i = 0
+
+    asset_template, geom_template = load_deco_templates()
+
+    deco_assets = ""
+    deco_geoms = ""
+
+
+    for (deco, sr) in zip(deco_list, sampled_regions):
+        with open(os.path.join(BASE_DIR, "scene_chunks", "decoration", deco), 'r') as file:
+            params = json.load(file)
+
+        side, reg = sr
+
+        wallpos = [float(x) for x in geom["wall"]["pos"][side].split(" ")]
+        wallsize = [float(x) for x in geom["wall"]["size"][side].split(" ")[:2]]
+        
+        d = 1 if side in ["left", "right"] else 0 # non null dimension
+        wr = abs(region_corners[reg][0] - wallpos[d])
+        hr = abs(region_corners[reg][1] - wallpos[2])
+
+        maxsizeregion = min(wr, hr)
+
+        mindecosize = params["geom"]["size_x"]["min"]
+        maxdecosize = min(params["geom"]["size_x"]["max"], maxsizeregion)
+        decosize_x = random.uniform(mindecosize, maxdecosize)
+        decosize_y = decosize_x / params["geom"]["aspect_ratio"]
+
+        decopos = [0,0,0]
+        decopos[d] = wallpos[d] + (-1)**(side in ['left', 'front'])*0.001
+        decopos[1-d] = region_centers[reg][0]
+        decopos[2] = region_centers[reg][1]
+
+        decoxyaxes = XYAXES[side]
+        
+        decoreplacements = {}
+
+        decoreplacements[KWDS["deco"]["asset"]["texture"]["name"]] = f"texdeco{i}"
+        decoreplacements[KWDS["deco"]["asset"]["texture"]["filename"]] = params["texture"]["filename"]
+        decoreplacements[KWDS["deco"]["asset"]["material"]["name"]] = f"matdeco{i}"
+        decoreplacements[KWDS["deco"]["asset"]["material"]["params"]] = " ".join([f"{k}=\"{v}\"" for k, v in  params["material"]["params"].items()])
+
+        decoreplacements[KWDS["deco"]["geom"]["name"]] = f"deco{i}"
+        decoreplacements[KWDS["deco"]["geom"]["size"]] = f"{decosize_x:.3f} {decosize_y:.3f} 0.1"
+        decoreplacements[KWDS["deco"]["geom"]["pos"]] = f"{decopos[0]:.3f} {decopos[1]:.3f} {decopos[2]:.3f}"
+        decoreplacements[KWDS["deco"]["geom"]["xyaxes"]] = decoxyaxes
+
+        deco_assets += replace_placeholders(asset_template, decoreplacements) + "\n\n\t\t"
+        deco_geoms += replace_placeholders(geom_template, decoreplacements) + "\n\n\t\t"
+
+        i+=1
+    
+    return deco_assets, deco_geoms
 
 
 def main():
@@ -180,6 +337,11 @@ def main():
     # LIGHTS
     for key in KWDS["lights"]:
         replacements[KWDS["lights"][key]["pos"]] = sample_light_params(room_size)
+
+    # DECORATIONS
+    deco_assets, deco_geoms = generate_decorations(geom, replacements)
+    replacements[KWDS["deco"]["asset"]["placeholder"]] = deco_assets
+    replacements[KWDS["deco"]["geom"]["placeholder"]] = deco_geoms
 
     # Insert the sampled variations into the scene XML
     scene = replace_placeholders(template, replacements)

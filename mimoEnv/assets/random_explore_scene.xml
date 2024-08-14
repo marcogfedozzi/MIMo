@@ -45,13 +45,17 @@
         <texture name="texfloor" type="2d" file="env_tex/floor1.png"/>
         <material name="matfloor" texture="texfloor" texrepeat="1 1" texuniform="false" specular="0.0" shininess="0.0"/>
 
-        <texture name="texwall" type="2d" file="env_tex/wall4.png"/>
+        <texture name="texwall" type="2d" file="env_tex/wall1.png"/>
         <material name="matwall" texture="texwall" texrepeat="1 1" texuniform="false" specular="0.0" shininess="0.0"/>
 
         <texture name="texceil" type="2d" file="env_tex/ceiling2.png"/>
         <material name="matceil" texture="texceil" texrepeat="1 1" texuniform="false" specular="0.0" shininess="0.0"/>
-        <!--@ASSETDECOPLACEHOLDER@-->
+        
+        <!-- Decorations -->
+        <texture name="texdeco0" type="2d" file="env_tex/portrait3.png"/>
+		<material name="matdeco0" texture="texdeco0" texrepeat="1 1" texuniform="false" specular="0.0" shininess="0.0"/>		
 
+		
     </asset>
 
 	
@@ -64,8 +68,8 @@
 
     <worldbody>
 
-        <light directional="false" diffuse=".7 .7 .7" specular="0 0 0" pos="-0.6852729868778438 -0.2588109004069858 1.3638059168456396" dir="0 0 -1" castshadow="false"/>
-        <light mode="targetbodycom" target="upper_body" directional="false" diffuse=".4 .4 .4" specular="0.3 0.3 0.3" pos="0.11990927978327237 -0.37917654714772564 1.2122457567557101" dir="0 0 -1"/>
+        <light directional="false" diffuse=".7 .7 .7" specular="0 0 0" pos="-0.44367369194449124 -0.38944208428760374 0.7266671938261966" dir="0 0 -1" castshadow="false"/>
+        <light mode="targetbodycom" target="upper_body" directional="false" diffuse=".4 .4 .4" specular="0.3 0.3 0.3" pos="0.496135308943098 0.3767469704029447 0.7290975614563302" dir="0 0 -1"/>
 	
 		<!-- The location and orientation of the base model can be set using this body -->
 		<body name="mimo_location" pos="0.0579584 -0.00157173 0.0566738" quat="0.892294 -0.0284863 -0.450353 -0.0135029">
@@ -87,17 +91,19 @@
 
         <!-- Room -->
 
-        <geom name="floor"      type="plane" material="matfloor" size="1.524 1.063 0.25"  pos="0 0 0" condim="3"/>
+        <geom name="floor"      type="plane" material="matfloor" size="1.162 1.199 0.25"  pos="0 0 0" condim="3"/>
 
-        <geom name="wall_left"  type="plane" material="matwall"  size="1.524 1.404 0.25" pos="0 1.063 1.404" xyaxes="1 0 0 0 0 1"/>
-        <geom name="wall_right" type="plane" material="matwall"  size="1.524 1.404 0.25" pos="0 -1.063 1.404" xyaxes="-1 0 0 0 0 1"/>
-        <geom name="wall_front" type="plane" material="matwall"  size="1.063 1.404 0.25" pos="1.524 0 1.404" xyaxes="0 -1 0 0 0 1"/>
-        <geom name="wall_back"  type="plane" material="matwall"  size="1.063 1.404 0.25" pos="-1.524 0 1.404" xyaxes="0 1 0 0 0 1"/>
+        <geom name="wall_left"  type="plane" material="matwall"  size="1.162 0.774 0.25" pos="0 1.199 0.774" xyaxes="1 0 0 0 0 1"/>
+        <geom name="wall_right" type="plane" material="matwall"  size="1.162 0.774 0.25" pos="0 -1.199 0.774" xyaxes="-1 0 0 0 0 1"/>
+        <geom name="wall_front" type="plane" material="matwall"  size="1.199 0.774 0.25" pos="1.162 0 0.774" xyaxes="0 -1 0 0 0 1"/>
+        <geom name="wall_back"  type="plane" material="matwall"  size="1.199 0.774 0.25" pos="-1.162 0 0.774" xyaxes="0 1 0 0 0 1"/>
 
-        <geom name="ceil"       type="plane" material="matceil"  size="1.524 1.063 0.25"  pos="0 0 2.808" zaxis="0 0 -1" condim="3" />
+        <geom name="ceil"       type="plane" material="matceil"  size="1.162 1.199 0.25"  pos="0 0 1.548" zaxis="0 0 -1" condim="3" />
 
-        <!--@BODYDECOPLACEHOLDER@-->
-	
+        <!-- Decorations -->
+        <geom name="deco0"  type="plane" material="matdeco0"  size="0.266 0.266 0.1" pos="1.161 -0.480 0.464" xyaxes="0 -1 0 0 0 1"/>		
+
+		
     </worldbody>
 
 </mujoco>

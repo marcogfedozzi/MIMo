@@ -50,8 +50,9 @@
 
         <texture name="texceil" type="2d" file="env_tex/@CEILTEXFILENAME@"/>
         <material name="matceil" texture="texceil" texrepeat="1 1" texuniform="false" @CEILMATPARAMS@/>
-        <!--@ASSETDECOPLACEHOLDER@-->
-
+        
+        <!-- Decorations -->
+        @DECOASSET@
     </asset>
 
 	
@@ -89,15 +90,15 @@
 
         <geom name="floor"      type="plane" material="matfloor" size="@FLOORSIZE@"  pos="0 0 0" condim="3"/>
 
-        <geom name="wall_left"  type="plane" material="matwall"  size="@WALLSIZE_L@" pos="@WALLPOS_L@" xyaxes="1 0 0 0 0 1"/>
-        <geom name="wall_right" type="plane" material="matwall"  size="@WALLSIZE_R@" pos="@WALLPOS_R@" xyaxes="-1 0 0 0 0 1"/>
-        <geom name="wall_front" type="plane" material="matwall"  size="@WALLSIZE_F@" pos="@WALLPOS_F@" xyaxes="0 -1 0 0 0 1"/>
-        <geom name="wall_back"  type="plane" material="matwall"  size="@WALLSIZE_B@" pos="@WALLPOS_B@" xyaxes="0 1 0 0 0 1"/>
+        <geom name="wall_left"  type="plane" material="matwall"  size="@WALLSIZE_L@" pos="@WALLPOS_L@" xyaxes="@WALLXYAXES_L@"/>
+        <geom name="wall_right" type="plane" material="matwall"  size="@WALLSIZE_R@" pos="@WALLPOS_R@" xyaxes="@WALLXYAXES_R@"/>
+        <geom name="wall_front" type="plane" material="matwall"  size="@WALLSIZE_F@" pos="@WALLPOS_F@" xyaxes="@WALLXYAXES_F@"/>
+        <geom name="wall_back"  type="plane" material="matwall"  size="@WALLSIZE_B@" pos="@WALLPOS_B@" xyaxes="@WALLXYAXES_B@"/>
 
         <geom name="ceil"       type="plane" material="matceil"  size="@FLOORSIZE@"  pos="@CEILPOS@" zaxis="0 0 -1" condim="3" />
 
-        <!--@BODYDECOPLACEHOLDER@-->
-	
+        <!-- Decorations -->
+        @DECOGEOM@
     </worldbody>
 
 </mujoco>

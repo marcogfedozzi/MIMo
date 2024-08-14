@@ -1,5 +1,5 @@
 {
     "texture": {"filename": "portrait2.png"},
     "material": {"params": {"specular": 0.0, "shininess": 0.0}},
-    "geom": {"size_x": {"min": 0.2, "max": 0.6}, "aspec_ratio": 1.0}
+    "geom": {"size_x": {"min": 0.2, "max": 0.6}, "aspect_ratio": 1.0}
 }

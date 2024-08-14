@@ -1,0 +1,1 @@
+<geom name="@DECOGEOMNAME@"  type="plane" material="@DECOMATNAME@"  size="@GEOMDECOSIZE@" pos="@GEOMDECOPOS@" xyaxes="@GEOMDECOXYAXES@"/>
