@@ -16,12 +16,16 @@
 import json
 import os
 import random
+import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 from mimoEnv.envs.mimo_env import SCENE_DIRECTORY
 
 
 class SceneComposer:
     XYAXES = {"left": "1 0 0 0 0 1", "right": "-1 0 0 0 0 1", "front": "0 -1 0 0 0 1", "back": "0 1 0 0 0 1"}
+
+    INIT_MIMO_ROT = [0.892294, -0.0284863, -0.450353, -0.0135029]
 
     KWDS = {
         "room":{
@@ -154,6 +158,12 @@ class SceneComposer:
         deco_assets, deco_geoms = self.generate_decorations(geom)
         replacements[KWDS["deco"]["asset"]["placeholder"]] = deco_assets
         replacements[KWDS["deco"]["geom"]["placeholder"]] = deco_geoms
+
+        # MIMo
+
+        pos, quat = self.pose_mimo(room_size)
+        replacements["MIMOPOS"] = " ".join([f"{x:.3f}" for x in pos])
+        replacements["MIMOQUAT"] = " ".join([f"{x:.3f}" for x in quat])
 
         # Insert the sampled variations into the scene XML
 
@@ -366,6 +376,35 @@ class SceneComposer:
             i+=1
         
         return deco_assets, deco_geoms
+
+    def pose_mimo(self, room_size):
+
+        room_lim = np.array(room_size) - 0.6
+        pose = np.ones(3)*0.0566738
+        pose[:2] = np.random.standard_normal(2)*room_lim[:2]/3
+        pose = np.clip(pose, -room_lim, room_lim)
+
+        print(pose)
+
+        angle = random.uniform(0, 2*np.pi)
+
+        axisangle = [0, 0, angle]
+
+        initquat = np.empty(4)
+        # From scalar first to scalar last
+        initquat[3] = self.INIT_MIMO_ROT[0]
+        initquat[:3] = self.INIT_MIMO_ROT[1:]
+
+
+        r1 = R.from_quat(initquat)
+        r2 = R.from_rotvec(axisangle)
+        r = (r2*r1).as_quat()
+
+        outquat = np.empty(4)
+        outquat[0] = r[3]
+        outquat[1:] = r[:3]
+
+        return pose, outquat
 
 def main():
 
