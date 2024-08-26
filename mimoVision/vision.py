@@ -177,6 +177,8 @@ class SimpleVision(Vision):
         w = rgb_viewer.viewport.width
         h = rgb_viewer.viewport.height
 
+        y = h-y # move center of the image to the bottom left corner
+
         point  = np.zeros(3, dtype=np.float64)
         geomid = np.zeros(1, dtype=np.int32)
         flexid = np.zeros(1, dtype=np.int32)

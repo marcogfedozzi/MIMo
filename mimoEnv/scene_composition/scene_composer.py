@@ -21,12 +21,15 @@ from scipy.spatial.transform import Rotation as R
 
 from mimoEnv.envs.mimo_env import SCENE_DIRECTORY
 from mimoEnv.scene_composition.utils import DoubleCosine, InvDist
+import re
+import mimoEnv.utils as me_utils
 
 
 class SceneComposer:
     XYAXES = {"left": "1 0 0 0 0 1", "right": "-1 0 0 0 0 1", "front": "0 -1 0 0 0 1", "back": "0 1 0 0 0 1"}
     COLORS = ("red", "green", "blue", "yellow", "orange")
     INIT_MIMO_ROT = [0.892294, -0.0284863, -0.450353, -0.0135029]
+    INIT_MIMO_POS = [0.0579584, -0.00157173, 0.0566738]
 
     KWDS = {
         "room":{
@@ -110,12 +113,14 @@ class SceneComposer:
     def __init__(self, mimo_version, room_size_min, room_size_max,
                  template_dir="templates", template_scene_file="template_scene.xml", 
                  output_scene_file="random_explore_scene.xml",
+                 mimo_min_dist_from_wall=0.6,
                  deco_template_asset_file="asset_deco_template.xml",
                  deco_template_geom_file="geom_deco_template.xml",
                  toys_num_range=[1,10],
                  toy_template_asset_file="asset_toy_template.xml",
                  toy_template_body_file="body_toy_template.xml",
-                 toy_area_frustum_deg=30, toy_distance_range=[0.5, 1.5], toy_scale_range=[0.01, 0.05]):
+                 toy_area_frustum_deg=30, toy_distance_range=[0.5, 1.5], toy_scale_range=[0.01, 0.05],
+                 toy_z_max=1.0):
         assert str(mimo_version) in ["v1", "v2", "1", "2"], "Invalid MIMo version"
 
         self.mimo_version = "v2" if str(mimo_version) in ["v2", "2"] else "v1"
@@ -135,6 +140,10 @@ class SceneComposer:
         self.deco_template_asset_file = os.path.join(self.template_dir, deco_template_asset_file)
         self.deco_template_geom_file = os.path.join(self.template_dir, deco_template_geom_file)
 
+        # MIMo
+
+        self.mimo_minwdist = mimo_min_dist_from_wall
+
         # Toys
 
         self.toy_num_range = toys_num_range
@@ -145,6 +154,7 @@ class SceneComposer:
         assert len(toy_distance_range) == 2 and toy_distance_range[0] <= toy_distance_range[1], "Invalid toy distance range"
         self.toy_dist_r = toy_distance_range
         self.toy_scale_r = toy_scale_range
+        self.toy_z_max = toy_z_max
 
         # --- #
 
@@ -196,11 +206,11 @@ class SceneComposer:
 
         # MIMo
 
-        #mimo_pos, mimo_quat, mimo_angle = self.pose_mimo(room_size) # !DEBUG!
+        mimo_pos, mimo_quat, mimo_angle = self.pose_mimo(room_size) # !DEBUG!
 
-        mimo_pos = [0,0,0]
-        mimo_quat = self.INIT_MIMO_ROT
-        mimo_angle = 0
+        # mimo_pos = [0,0,0]
+        # mimo_quat = self.INIT_MIMO_ROT
+        # mimo_angle = 0
         replacements["MIMOPOS"] = " ".join([f"{x:.3f}" for x in mimo_pos])
         replacements["MIMOQUAT"] = " ".join([f"{x:.3f}" for x in mimo_quat])
 
@@ -424,30 +434,18 @@ class SceneComposer:
 
     def pose_mimo(self, room_size):
 
-        room_lim = np.array(room_size) - 0.6
-        pose = np.ones(3)*0.0566738
+        room_lim = np.array(room_size) - self.mimo_minwdist
+        pose = self.INIT_MIMO_POS.copy()
         pose[:2] = np.random.standard_normal(2)*room_lim[:2]/3
         pose = np.clip(pose, -room_lim, room_lim)
 
         angle = random.uniform(0, 2*np.pi)
 
-        axisangle = [0, 0, angle]
+        r1 = R.from_quat(me_utils.quat_wlast(self.INIT_MIMO_ROT))
+        r2 = R.from_rotvec([0,0,angle])
+        r = me_utils.quat_wfirst((r2*r1).as_quat())
 
-        initquat = np.empty(4)
-        # From scalar first to scalar last
-        initquat[3] = self.INIT_MIMO_ROT[0]
-        initquat[:3] = self.INIT_MIMO_ROT[1:]
-
-
-        r1 = R.from_quat(initquat)
-        r2 = R.from_rotvec(axisangle)
-        r = (r2*r1).as_quat()
-
-        outquat = np.empty(4)
-        outquat[0] = r[3]
-        outquat[1:] = r[:3]
-
-        return pose, outquat, angle
+        return pose, r, angle
     
     def spawn_toys(self, mimo_pos, mimo_angle, room_size):
 
@@ -515,7 +513,7 @@ class SceneComposer:
         toy_pos = np.zeros((Nt, 3)) + mimo_pos
         toy_pos[:, 0] += toy_dists*np.cos(toy_angles)
         toy_pos[:, 1] += toy_dists*np.sin(toy_angles)
-        toy_pos[:, 2] += 0.1
+        toy_pos[:, 2] += np.random.uniform(0.1, self.toy_z_max-mimo_pos[2], Nt)
 
 
         toy_rot = np.random.uniform(0, 2*np.pi, Nt)
@@ -577,8 +575,44 @@ class SceneComposer:
         d = min(abs(dists[0]/np.cos(angle)), abs(dists[1]/np.sin(angle)))
 
         return d - margin
+    
+    def read_scene_file(self):
+        with open(self.output_scene_file, 'r') as file:
+            scene = file.read()
 
+        def _read_pos_quat_angle(scene):
+            pos = None
+            quat = None
 
+            match = re.search(r'<body name="mimo_location" pos="(.*?)" quat="(.*?)">', scene)
+            if not match:
+                raise ValueError("MIMo location and quaterion not found in scene file")
+            
+            pos = np.array([float(x) for x in match.group(1).split()])
+            quat = np.array([float(x) for x in match.group(2).split()])
+
+            q_final = R.from_quat(me_utils.quat_wfirst(q_final))
+            q_init = R.from_quat(me_utils.quat_wfirst(self.INIT_MIMO_ROT))
+
+            angle = q_init*q_final.inv()
+
+            return pos, quat, angle.as_rotvec()[2]
+        
+        def _read_room_size(scene):
+            match = re.search(r'<geom name="wall_left"  type="plane" material="matwall"  size="(.*?)" pos="(.*?)" xyaxes="1 0 0 0 0 1"/>', scene)
+            if not match:
+                raise ValueError("Room size not found in scene file")
+            
+            wallsize = [float(x) for x in match.group(1).split()]
+            wallpos = [float(x) for x in match.group(2).split()]
+
+            return np.array([wallsize[0], wallpos[1], wallpos[2]])
+        
+        mimo_pos, mimo_quat, mimo_angle = _read_pos_quat_angle(scene)
+        room_size = _read_room_size(scene)
+
+        return dict(mimo_pos=mimo_pos, mimo_quat=mimo_quat, mimo_angle=mimo_angle, room_size=room_size)
+            
 
 def main():
 

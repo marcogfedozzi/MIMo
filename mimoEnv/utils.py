@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import mujoco
 from typing import List, Dict, Tuple
+from numpy.typing import NDArray
 
 EPS = 1e-10
 
@@ -560,7 +561,6 @@ def body_rot_to_world(mujoco_data, vector, body_id):
     """
     return np.transpose(rotate_vector(np.transpose(vector), get_body_rotation(mujoco_data, body_id)))
 
-
 def world_rot_to_geom(mujoco_data, vector, geom_id):
     """ Converts a vectors direction from the world coordinate frame to a geoms specific frame.
 
@@ -663,6 +663,15 @@ def body_rot_to_body(mujoco_data, vector, body_id_source, body_id_target):
     """
     world_rot = body_rot_to_world(mujoco_data, vector, body_id_source)
     return world_rot_to_body(mujoco_data, world_rot, body_id_target)
+
+
+def quat_wlast(quat: NDArray) -> NDArray:
+    """Transforms a quaternion from [x, y, z, w] to [w, x, y, z] format."""
+    return np.array([quat[1], quat[2], quat[3], quat[0]])
+
+def quat_wfirst(quat: NDArray) -> NDArray:
+    """Transforms a quaternion from [w, x, y, z] to [x, y, z, w] format."""
+    return np.array([quat[3], quat[0], quat[1], quat[2]])
 
 
 # ======================== Plotting utils =========================================
