@@ -20,11 +20,12 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 from mimoEnv.envs.mimo_env import SCENE_DIRECTORY
+from mimoEnv.scene_composition.utils import DoubleCosine, InvDist
 
 
 class SceneComposer:
     XYAXES = {"left": "1 0 0 0 0 1", "right": "-1 0 0 0 0 1", "front": "0 -1 0 0 0 1", "back": "0 1 0 0 0 1"}
-
+    COLORS = ("red", "green", "blue", "yellow", "orange")
     INIT_MIMO_ROT = [0.892294, -0.0284863, -0.450353, -0.0135029]
 
     KWDS = {
@@ -89,12 +90,32 @@ class SceneComposer:
                 "xyaxes": "GEOMDECOXYAXES"
             },
         },
+        "toys": {
+            "asset": {
+                "placeholder": "TOYASSET",
+                "material": {"name": "TOYMATNAME", "rgba": "TOYMATRGBA", "specular": "TOYMATSPEC", "shininess": "TOYMATSHINE"},
+                "mesh": {"name": "TOYMESHNAME", "file": "TOYMESHFILE", "scale": "TOYMESHSCALE"},
+            },
+            "body": {
+                "placeholder": "TOYBODY",
+                "name": "TOYBODYNAME",
+                "pos": "TOYBODYPOS",
+                "euler": "TOYBODYEULER",
+            },
+            "geom": {
+                "size": "TOYGEOMSIZE",
+            },
+        }
     }
     def __init__(self, mimo_version, room_size_min, room_size_max,
                  template_dir="templates", template_scene_file="template_scene.xml", 
                  output_scene_file="random_explore_scene.xml",
                  deco_template_asset_file="asset_deco_template.xml",
-                 deco_template_geom_file="geom_deco_template.xml"):
+                 deco_template_geom_file="geom_deco_template.xml",
+                 toys_num_range=[1,10],
+                 toy_template_asset_file="asset_toy_template.xml",
+                 toy_template_body_file="body_toy_template.xml",
+                 toy_area_frustum_deg=30, toy_distance_range=[0.5, 1.5], toy_scale_range=[0.01, 0.05]):
         assert str(mimo_version) in ["v1", "v2", "1", "2"], "Invalid MIMo version"
 
         self.mimo_version = "v2" if str(mimo_version) in ["v2", "2"] else "v1"
@@ -113,6 +134,19 @@ class SceneComposer:
 
         self.deco_template_asset_file = os.path.join(self.template_dir, deco_template_asset_file)
         self.deco_template_geom_file = os.path.join(self.template_dir, deco_template_geom_file)
+
+        # Toys
+
+        self.toy_num_range = toys_num_range
+        self.toy_template_asset_file = os.path.join(self.template_dir, toy_template_asset_file)
+        self.toy_template_body_file = os.path.join(self.template_dir, toy_template_body_file)
+        self.toys_dir = os.path.join(SCENE_DIRECTORY, "meshes")
+        self.toy_area_f = np.deg2rad(toy_area_frustum_deg) # degrees to radians
+        assert len(toy_distance_range) == 2 and toy_distance_range[0] <= toy_distance_range[1], "Invalid toy distance range"
+        self.toy_dist_r = toy_distance_range
+        self.toy_scale_r = toy_scale_range
+
+        # --- #
 
         self.scene = ""
 
@@ -159,17 +193,28 @@ class SceneComposer:
         replacements[KWDS["deco"]["asset"]["placeholder"]] = deco_assets
         replacements[KWDS["deco"]["geom"]["placeholder"]] = deco_geoms
 
+
         # MIMo
 
-        pos, quat = self.pose_mimo(room_size)
-        replacements["MIMOPOS"] = " ".join([f"{x:.3f}" for x in pos])
-        replacements["MIMOQUAT"] = " ".join([f"{x:.3f}" for x in quat])
+        #mimo_pos, mimo_quat, mimo_angle = self.pose_mimo(room_size) # !DEBUG!
+
+        mimo_pos = [0,0,0]
+        mimo_quat = self.INIT_MIMO_ROT
+        mimo_angle = 0
+        replacements["MIMOPOS"] = " ".join([f"{x:.3f}" for x in mimo_pos])
+        replacements["MIMOQUAT"] = " ".join([f"{x:.3f}" for x in mimo_quat])
+
+        # TOYS
+
+        toy_assets, toy_bodies = self.spawn_toys(mimo_pos, mimo_angle, room_size)
+        replacements[KWDS["toys"]["asset"]["placeholder"]] = toy_assets
+        replacements[KWDS["toys"]["body"]["placeholder"]] = toy_bodies
 
         # Insert the sampled variations into the scene XML
 
         self.scene = self.replace_placeholders(template, replacements)
 
-        return self.scene
+        return dict(mimo_pos=mimo_pos, mimo_quat=mimo_quat, mimo_angle=mimo_angle, room_size=room_size)
 
     def load_scene_template(self):
         with open(self.template_file, 'r') as file:
@@ -384,8 +429,6 @@ class SceneComposer:
         pose[:2] = np.random.standard_normal(2)*room_lim[:2]/3
         pose = np.clip(pose, -room_lim, room_lim)
 
-        print(pose)
-
         angle = random.uniform(0, 2*np.pi)
 
         axisangle = [0, 0, angle]
@@ -404,11 +447,144 @@ class SceneComposer:
         outquat[0] = r[3]
         outquat[1:] = r[:3]
 
-        return pose, outquat
+        return pose, outquat, angle
+    
+    def spawn_toys(self, mimo_pos, mimo_angle, room_size):
+
+        # sample num toys from 1 to n_toys_max
+        # for each toy
+        #   sample a position around MIMo
+        #       sample from either a left or right von Mises distribution centered at MIMo's 
+        #       angle +- gamma degrees
+        #       sample the distance with a uniform distribution
+        #   sample a rotation
+        #   sample a scale
+        #   sample a toy from the assets/meshes folder
+        #   sample a color material from a known list
+
+
+        def load_toy_templates():
+            asset_template = ""
+            body_template = ""
+
+            with open(self.toy_template_asset_file, 'r') as file:
+                for line in file:
+                    asset_template += line+"\t\t"
+            with open(self.toy_template_body_file, 'r') as file:
+                for line in file:
+                    body_template += line+"\t\t"
+            
+            return asset_template, body_template
+        # --- #
+
+        KWDS = self.KWDS
+        Nt = random.randint(*self.toy_num_range)
+
+        toys_list = [file for file in os.listdir(self.toys_dir) if file.endswith('.stl')]
+        toys_list = random.choices(toys_list, k=Nt)
+
+        asset_template, body_template = load_toy_templates()
+
+        params = dict(c=self.toy_area_f, a=0, b=np.pi)
+
+        dist_l = DoubleCosine(**params)
+        dist_r = InvDist(dist_type=DoubleCosine, **params)
+
+        l_toys = np.random.binomial(Nt, 0.5)
+        r_toys = Nt - l_toys
+
+        dl = dist_l.rvs(size=l_toys)
+        dr = dist_r.rvs(size=r_toys)
+
+        if l_toys == 0:
+            toy_angles = dr + mimo_angle
+        elif r_toys == 0:
+            toy_angles = dl + mimo_angle
+        else:
+            toy_angles = np.concatenate([dl, dr], axis=0) + mimo_angle
+
+        toy_dists = np.empty(Nt)
+
+        toy_angles = toy_angles % (2*np.pi)
+        
+        for i, ang in enumerate(toy_angles):
+            d = self._dist_from_wall(mimo_pos, ang, room_size, margin=0.1)
+            #print(f"DEBUG: dist from wall {d} [{mimo_pos=}], [{ang=} ({mimo_angle})], [{room_size=}]")
+            toy_dists[i] = random.uniform(self.toy_dist_r[0], min(self.toy_dist_r[1], d))
+
+        toy_pos = np.zeros((Nt, 3)) + mimo_pos
+        toy_pos[:, 0] += toy_dists*np.cos(toy_angles)
+        toy_pos[:, 1] += toy_dists*np.sin(toy_angles)
+        toy_pos[:, 2] += 0.1
+
+
+        toy_rot = np.random.uniform(0, 2*np.pi, Nt)
+
+        toy_scales = np.random.uniform(*self.toy_scale_r, Nt) 
+
+        toy_colors = np.empty((Nt, 3), dtype=np.float32)
+        for i in range(3):
+            toy_colors[:, i] = np.random.uniform(0, 1, Nt)
+        
+        toy_specular = np.random.beta(1, 5, Nt)
+        toy_shininess = np.random.beta(1, 5, Nt)
+
+        toy_assets = ""
+        toy_bodies = ""
+
+        for i in range(Nt):
+            toyreplacements = {}
+
+            toyreplacements[KWDS["toys"]["asset"]["material"]["name"]] = f"toy{i}_mat"
+            toyreplacements[KWDS["toys"]["asset"]["material"]["rgba"]] = f"{toy_colors[i][0]:.3f} {toy_colors[i][1]:.3f} {toy_colors[i][2]:.3f} 1"
+            toyreplacements[KWDS["toys"]["asset"]["material"]["specular"]] = f"{toy_specular[i]:.3f}" 
+            toyreplacements[KWDS["toys"]["asset"]["material"]["shininess"]] = f"{toy_shininess[i]:.3f}" 
+
+
+            toyreplacements[KWDS["toys"]["asset"]["mesh"]["name"]] = f"mesh_toy{i}"
+            toyreplacements[KWDS["toys"]["asset"]["mesh"]["file"]] = toys_list[i]
+            toyreplacements[KWDS["toys"]["asset"]["mesh"]["scale"]] = f"{toy_scales[i]:.3f} {toy_scales[i]:.3f} {toy_scales[i]:.3f}"
+
+            toyreplacements[KWDS["toys"]["body"]["name"]] = f"toy{i}"
+            toyreplacements[KWDS["toys"]["body"]["pos"]] = f"{toy_pos[i][0]:.3f} {toy_pos[i][1]:.3f} {toy_pos[i][2]:.3f}"
+            toyreplacements[KWDS["toys"]["body"]["euler"]] = f"0 0 {np.rad2deg(toy_rot[i]):.3f}"
+
+            toy_assets += self.replace_placeholders(asset_template, toyreplacements) + "\n\n\t\t"
+            toy_bodies += self.replace_placeholders(body_template, toyreplacements) + "\n\n\t\t"
+
+        return toy_assets, toy_bodies
+    
+    def _check_position_in_room(self, pos, room_size, margin):
+        return np.all(np.abs(pos) < np.array(room_size) - margin)
+    
+    def _dist_from_wall(self, pos, angle, room_size, margin=0.0):
+        """Return the length of the vector from pos to the nearest wall along direction angle"""
+        
+        # a. find the two closest walls to projection
+
+        if np.isclose(angle, 0, atol=1e-3) or np.isclose(angle, np.pi, atol=1e-3): return abs(room_size[0] - pos[0])
+        if np.isclose(angle, np.pi/2, atol=1e-3) or np.isclose(angle, 3*np.pi/2, atol=1e-3): return abs(room_size[1] - pos[1])
+
+
+        k = np.empty(2)
+        if angle > 0 and angle < np.pi/2:           k = np.array((1,1))
+        elif angle > np.pi/2 and angle < np.pi:     k = np.array((-1,1))
+        elif angle > np.pi and angle < 3*np.pi/2:   k = np.array((-1,-1))
+        else:                                       k = np.array((1,-1))
+
+        dists = np.abs(k*room_size[:2] - pos[:2])
+
+        d = min(abs(dists[0]/np.cos(angle)), abs(dists[1]/np.sin(angle)))
+
+        return d - margin
+
+
 
 def main():
 
-    pass
+    sc = SceneComposer("v2", [1,1,1], [3,3,3])
+    sc.make_scene()
+    sc.write_scene_file()
 
 
 

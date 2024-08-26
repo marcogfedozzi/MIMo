@@ -1,0 +1,4 @@
+<body name="@TOYBODYNAME@" pos="@TOYBODYPOS@" euler="@TOYBODYEULER@">
+    <freejoint/>
+    <geom type="mesh" mesh="@TOYMESHNAME@" condim="6" mass="0.3" material="@TOYMATNAME@"/>
+</body>

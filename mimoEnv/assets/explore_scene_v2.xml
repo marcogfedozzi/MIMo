@@ -7,7 +7,7 @@
     <size nconmax="1000" njmax="5000" nstack="10000000"/>
 
     <visual>
-        <map force="0.1" zfar="30" znear="0.005"/>
+        <map force="0.1" zfar="30" znear="0.001"/>
         <rgba haze="0.15 0.25 0.35 0.5"/>
         <quality shadowsize="4096"/>
         <global offwidth="800" offheight="800"/>

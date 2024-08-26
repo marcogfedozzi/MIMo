@@ -1,0 +1,2 @@
+<mesh name="@TOYMESHNAME@" file="meshes/@TOYMESHFILE@" scale="@TOYMESHSCALE@"/>
+<material name="@TOYMATNAME@" rgba="@TOYMATRGBA@" specular="@TOYMATSPEC@" shininess="@TOYMATSHINE@"/>

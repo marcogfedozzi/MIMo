@@ -53,6 +53,10 @@
         
         <!-- Decorations -->
         @DECOASSET@
+
+        <!-- Toys -->
+        @TOYASSET@
+        
     </asset>
 
 	
@@ -99,6 +103,10 @@
 
         <!-- Decorations -->
         @DECOGEOM@
+
+        <!-- Toys -->
+        @TOYBODY@
+
     </worldbody>
 
 </mujoco>
