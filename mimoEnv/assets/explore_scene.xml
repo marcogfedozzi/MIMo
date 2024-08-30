@@ -2,7 +2,7 @@
 
     <compiler inertiafromgeom="true" angle="degree"/>
 
-    <option gravity="0 0 -9.81" timestep="0.005" iterations="50" tolerance="1e-10" solver="Newton" jacobian="dense" cone="elliptic" impratio="1.0"/>
+    <option gravity="0 0 -9.81" timestep="0.002" iterations="50" tolerance="1e-10" solver="Newton" jacobian="dense" cone="elliptic" impratio="1.0"/>
 
     <size nconmax="1000" njmax="5000" nstack="10000000"/>
 
@@ -156,7 +156,19 @@
 			<geom type="sphere" size="0.01" contype="0" conaffinity="0" material="blue" group="4"/> 
 		</body>
 
-	
+		<!-- Toy motion mocap -->
+		
+		<body name="toy_mocap" mocap="true" pos=".0 .0 .0">
+			<!--geom type="sphere" size="0.01" contype="0" conaffinity="0" material="red" group="4"/--> 
+			<geom pos="0 0 0.035" size="0.003 0.003 0.05" type="box" rgba="0 0 1 1" group="4" contype="0" conaffinity="0"/>
+			<geom pos="0 0.035 0" size="0.003 0.05 0.003" type="box" rgba="0 1 0 1" group="4" contype="0" conaffinity="0"/>
+			<geom pos="0.035 0 0" size="0.05 0.003 0.003" type="box" rgba="1 0 0 1" group="4" contype="0" conaffinity="0"/>
+		</body>
+
     </worldbody>
+	
+	<equality>
+		<weld name="toy_ctrl" body1="toy_mocap" body2="toy1" active="false" solimp="0.9 0.95 0.001 0.1 4" solref="0.02 1" relpose="0 0 0 1 0 0 0" anchor="0 0 0"/>
+	</equality>
 
 </mujoco>
