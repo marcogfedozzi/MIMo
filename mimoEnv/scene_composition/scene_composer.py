@@ -156,6 +156,8 @@ class SceneComposer:
         self.toy_scale_r = toy_scale_range
         self.toy_z_max = toy_z_max
 
+        self.num_toys = -1
+
         # --- #
 
         self.scene = ""
@@ -477,6 +479,7 @@ class SceneComposer:
 
         KWDS = self.KWDS
         Nt = random.randint(*self.toy_num_range)
+        self.num_toys = Nt
 
         toys_list = [file for file in os.listdir(self.toys_dir) if file.endswith('.stl')]
         toys_list = random.choices(toys_list, k=Nt)
@@ -580,7 +583,7 @@ class SceneComposer:
         with open(self.output_scene_file, 'r') as file:
             scene = file.read()
 
-        def _read_pos_quat_angle(scene):
+        def _read_pos_quat_angle(scene: str):
             pos = None
             quat = None
 
@@ -591,14 +594,14 @@ class SceneComposer:
             pos = np.array([float(x) for x in match.group(1).split()])
             quat = np.array([float(x) for x in match.group(2).split()])
 
-            q_final = R.from_quat(me_utils.quat_wfirst(q_final))
+            q_final = R.from_quat(me_utils.quat_wfirst(quat))
             q_init = R.from_quat(me_utils.quat_wfirst(self.INIT_MIMO_ROT))
 
             angle = q_init*q_final.inv()
 
             return pos, quat, angle.as_rotvec()[2]
         
-        def _read_room_size(scene):
+        def _read_room_size(scene: str):
             match = re.search(r'<geom name="wall_left"  type="plane" material="matwall"  size="(.*?)" pos="(.*?)" xyaxes="1 0 0 0 0 1"/>', scene)
             if not match:
                 raise ValueError("Room size not found in scene file")
@@ -610,6 +613,12 @@ class SceneComposer:
         
         mimo_pos, mimo_quat, mimo_angle = _read_pos_quat_angle(scene)
         room_size = _read_room_size(scene)
+
+        def read_num_toys(scene: str):            
+            num_toys = len(re.findall(r'<body name="toy\d+"', scene))
+            return num_toys
+
+        self.num_toys = read_num_toys(scene)
 
         return dict(mimo_pos=mimo_pos, mimo_quat=mimo_quat, mimo_angle=mimo_angle, room_size=room_size)
             

@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.stats as stats
+
 class DoubleCosine(stats.rv_continuous):
     def __init__(self, c=np.pi, a=0, b=2*np.pi):
         super().__init__()

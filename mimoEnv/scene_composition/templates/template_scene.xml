@@ -107,6 +107,19 @@
         <!-- Toys -->
         @TOYBODY@
 
+        <!-- Toy motion mocap -->
+		
+		<body name="toy_mocap" mocap="true" pos=".0 .0 .0">
+			<!--geom type="sphere" size="0.01" contype="0" conaffinity="0" material="red" group="4"/--> 
+			<geom pos="0 0 0.03" size="0.003 0.003 0.04" type="box" rgba="0 0 1 1" group="4" contype="0" conaffinity="0"/>
+			<geom pos="0 0.03 0" size="0.003 0.04 0.003" type="box" rgba="0 1 0 1" group="4" contype="0" conaffinity="0"/>
+			<geom pos="0.03 0 0" size="0.05 0.004 0.003" type="box" rgba="1 0 0 1" group="4" contype="0" conaffinity="0"/>
+		</body>
+
     </worldbody>
+	
+	<equality>
+		<weld name="toy_ctrl" body1="toy_mocap" body2="toy0" active="false" solimp="0.95 0.998 0.001 0.1 2" solref="0.02 1" relpose="0 0 0 1 0 0 0" anchor="0 0 0"/>
+	</equality>
 
 </mujoco>
