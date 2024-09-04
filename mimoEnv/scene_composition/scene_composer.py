@@ -207,7 +207,6 @@ class SceneComposer:
 
 
         # MIMo
-
         mimo_pos, mimo_quat, mimo_angle = self.pose_mimo(room_size) # !DEBUG!
 
         # mimo_pos = [0,0,0]
