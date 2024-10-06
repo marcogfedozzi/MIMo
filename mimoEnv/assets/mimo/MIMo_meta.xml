@@ -174,7 +174,7 @@
 	<equality> <!-- These contraints are used for joint locking during runtime -->
 		<joint name="robot:hip_lean1" 					joint1="robot:hip_lean1" active="false" polycoef="0 1 0 0 0"/>
 		<joint name="robot:hip_rot1" 					joint1="robot:hip_rot1" active="false" polycoef="0 1 0 0 0"/>
-		<joint name="robot:hip_bend1" 					joint1="robot:hip_bend1" active="false" polycoef="0 1 0 0 0"/>
+		<joint name="robot:hip_bend1" 					joint1="robot:hip_bend1" active="false" polycoef="0 1 0 0 0	"/>
 		<joint name="robot:hip_lean2" 					joint1="robot:hip_lean2" active="false" polycoef="0 1 0 0 0"/>
 		<joint name="robot:hip_rot2" 					joint1="robot:hip_rot2" active="false" polycoef="0 1 0 0 0"/>
 		<joint name="robot:hip_bend2" 					joint1="robot:hip_bend2" active="false" polycoef="0 1 0 0 0"/>

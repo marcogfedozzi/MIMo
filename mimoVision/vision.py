@@ -313,31 +313,6 @@ class EditVision(SimpleVision):
 
         # check if func_args already specifies one set of args for each camera; otherwise copy the same args for each camera
     
-    def _set_image_warp_func_args(self, **kwargs):
-        """
-        kwargs: a dictionary of arguments to be passed to the function
-        expected either a list of arguments for each camera or a single set of arguments for all cameras
-        
-        e.g.
-
-        _set_func_args(eye_left_args = {"arg1": 1, "arg2": 2}, eye_right_args = {"arg1": 3, "arg2": 4})
-        or
-        _set_func_args(arg1=1, arg2=2)
-        """
-
-        _c = True
-        for camera in self._image_warp_func:
-            _c = _c and camera in kwargs
-
-        if not _c:
-            for camera in self._image_warp_func: # one set of parameters shared by all cameras
-                self._image_warp_func[camera] = self._image_warp_func[camera].update(**kwargs)
-        else:
-            for camera in self._image_warp_func: # one set of parameters for each cameras
-                self._image_warp_func[camera] = self._image_warp_func[camera].update(**kwargs[camera])
-
-        self._image_warp_func
-
     def get_vision_obs(self):
         imgs =  super().get_vision_obs()
 
@@ -408,6 +383,23 @@ class LogPolarVision(EditVision):
         y = d * np.sin(th) + self.camera_transform_parameters[camera_name]['yc']
 
         return super().get_3D_point(x, y, camera_name)
+
+    def get_logpolar_from_cartesian_2D(self, x, y, camera_name):
+        """
+        Returns the logpolar coordinates corresponding to the pixel (x, y) in the image of the camera with name camera_name.
+        """
+        xc = self.camera_transform_parameters[camera_name]['xc']
+        yc = self.camera_transform_parameters[camera_name]['yc']
+        Klog = self.camera_transform_parameters[camera_name]['Klog']
+        Kangle = self.camera_transform_parameters[camera_name]['Kangle']
+
+        dx = x - xc
+        dy = y - yc
+
+        rho = np.log(np.sqrt(dx**2 + dy**2)) * Klog
+        phi = np.arctan2(dy, dx) * Kangle
+
+        return rho, phi
 
 
 

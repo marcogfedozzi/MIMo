@@ -28,8 +28,6 @@ import mimoEnv.utils as me_utils
 class SceneComposer:
     XYAXES = {"left": "1 0 0 0 0 1", "right": "-1 0 0 0 0 1", "front": "0 -1 0 0 0 1", "back": "0 1 0 0 0 1"}
     COLORS = ("red", "green", "blue", "yellow", "orange")
-    INIT_MIMO_ROT = [0.892294, -0.0284863, -0.450353, -0.0135029]
-    INIT_MIMO_POS = [0.0579584, -0.00157173, 0.0566738]
 
     KWDS = {
         "room":{
@@ -120,7 +118,10 @@ class SceneComposer:
                  toy_template_asset_file="asset_toy_template.xml",
                  toy_template_body_file="body_toy_template.xml",
                  toy_area_frustum_deg=30, toy_distance_range=[0.5, 1.5], toy_scale_range=[0.01, 0.05],
-                 toy_z_max=1.0):
+                 toy_z_max=1.0,
+                 init_mimo_pos=[0.0579584, -0.00157173, 0.0566738], init_mimo_quat=[0.70710678, 0., -0.70710678, 0., ],
+                 locked_position=False
+                 ):
         assert str(mimo_version) in ["v1", "v2", "1", "2"], "Invalid MIMo version"
 
         self.mimo_version = "v2" if str(mimo_version) in ["v2", "2"] else "v1"
@@ -140,9 +141,13 @@ class SceneComposer:
         self.deco_template_asset_file = os.path.join(self.template_dir, deco_template_asset_file)
         self.deco_template_geom_file = os.path.join(self.template_dir, deco_template_geom_file)
 
+        self.init_mimo_pos = init_mimo_pos
+        self.init_mimo_quat = init_mimo_quat
+
         # MIMo
 
         self.mimo_minwdist = mimo_min_dist_from_wall
+        self.lock_mimo = locked_position
 
         # Toys
 
@@ -214,6 +219,10 @@ class SceneComposer:
         # mimo_angle = 0
         replacements["MIMOPOS"] = " ".join([f"{x:.3f}" for x in mimo_pos])
         replacements["MIMOQUAT"] = " ".join([f"{x:.3f}" for x in mimo_quat])
+        if self.lock_mimo:
+            replacements["MIMOWELD"] = "<equality>\n\t\t<weld body1=\"mimo_location\"/>\n</equality>"
+        else:
+            replacements["MIMOWELD"] = ""
 
         # TOYS
 
@@ -436,13 +445,13 @@ class SceneComposer:
     def pose_mimo(self, room_size):
 
         room_lim = np.array(room_size) - self.mimo_minwdist
-        pose = self.INIT_MIMO_POS.copy()
+        pose = self.init_mimo_pos.copy()
         pose[:2] = np.random.standard_normal(2)*room_lim[:2]/3
         pose = np.clip(pose, -room_lim, room_lim)
 
         angle = random.uniform(0, 2*np.pi)
 
-        r1 = R.from_quat(me_utils.quat_wlast(self.INIT_MIMO_ROT))
+        r1 = R.from_quat(me_utils.quat_wlast(self.init_mimo_quat))
         r2 = R.from_rotvec([0,0,angle])
         r = me_utils.quat_wfirst((r2*r1).as_quat())
 
@@ -594,7 +603,7 @@ class SceneComposer:
             quat = np.array([float(x) for x in match.group(2).split()])
 
             q_final = R.from_quat(me_utils.quat_wfirst(quat))
-            q_init = R.from_quat(me_utils.quat_wfirst(self.INIT_MIMO_ROT))
+            q_init = R.from_quat(me_utils.quat_wfirst(self.init_mimo_quat))
 
             angle = q_init*q_final.inv()
 

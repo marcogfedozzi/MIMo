@@ -2,7 +2,7 @@
 
     <compiler inertiafromgeom="true" angle="degree"/>
 
-    <option gravity="0 0 -9.81" timestep="0.005" iterations="50" tolerance="1e-10" solver="Newton" jacobian="dense" cone="elliptic" impratio="1.0"/>
+    <option gravity="0 0 -9.81" timestep="0.005" iterations="50" tolerance="1e-10" solver="Newton" jacobian="sparse" cone="elliptic" impratio="1.0"/>
 
     <size nconmax="1000" njmax="5000" nstack="10000000"/>
 
@@ -63,9 +63,7 @@
 	<!-- Import everything except the kinematic tree -->
 	<include file="explore_meta@MIMOVERSION@.xml"></include>
 
-	<equality>
-		<weld body1="mimo_location"/>
-	</equality>
+    @MIMOWELD@
 
     <worldbody>
 

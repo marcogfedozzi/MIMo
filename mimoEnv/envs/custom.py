@@ -266,55 +266,6 @@ R_REST_HAND_V2 = {
     "robot:right_th_distal": np.deg2rad(20),
 }
 
-
-SITTING_POSITION = {
-    "robot:hip_bend1": np.array([0.533]),
-    #"robot:hip_lean2": np.array([0.0272]),
-    #"robot:hip_rot2": np.array([-0.101]),
-    "robot:hip_lean2": np.array([0.0]),
-    "robot:hip_rot2": np.array([0.0]),
-    "robot:hip_bend2": np.array([0.519]),
-    
-    #"robot:right_hip1": np.array([-1.39]), "robot:right_hip2": np.array([-0.891]),
-    #"robot:right_hip3": np.array([0.546]), "robot:right_knee": np.array([-2.07]),
-    #"robot:right_foot1": np.array([-0.496]), "robot:right_foot2": np.array([0.01]),
-    #"robot:right_foot3": np.array([0.048]), "robot:right_toes": np.array([0.01]),
-
-    "robot:left_hip1": np.array([-0.725]), "robot:left_hip2": np.array([-0.006]),
-    "robot:left_hip3": np.array([0.7156]), "robot:left_knee": np.array([-0.352]),
-    "robot:left_foot1": np.array([-0.468]), "robot:left_foot2": np.array([0.03]),
-    "robot:left_foot3": np.array([-0.033]), "robot:left_toes": np.array([0.0]),
-
-    "robot:right_hip1": np.array([-0.725]),  "robot:right_hip2": np.array([-0.006]),
-    "robot:right_hip3": np.array([0.7156]),  "robot:right_knee": np.array([-0.352]),
-    "robot:right_foot1": np.array([-0.468]), "robot:right_foot2": np.array([0.03]),
-    "robot:right_foot3": np.array([-0.033]), "robot:right_toes": np.array([0.0]),
-    
-    #"robot:left_shoulder_horizontal": np.array([1.2]), "robot:left_shoulder_ad_ab": np.array([0.8]),
-    #"robot:left_shoulder_rotation": np.array([-1.0]), 
-    #"robot:left_elbow": np.array([-0.8]),
-}
-SITTING_POSITION_UNLOCK = {
-
-    "robot:head_swivel": np.array([0.385]), "robot:head_tilt": np.array([0.219]), "robot:head_tilt_side": np.array([0]),
-    "robot:left_eye_horizontal": np.array([0]), "robot:left_eye_vertical": np.array([0]),
-    "robot:left_eye_torsional": np.array([0]), "robot:right_eye_horizontal": np.array([0]),
-    "robot:right_eye_vertical": np.array([0]), "robot:right_eye_torsional": np.array([0]),
-    
-    "robot:hip_lean1": np.array([0.024]), 
-    "robot:hip_rot1": np.array([-0.124]),
-
-    #"robot:right_shoulder_horizontal": np.array([1.32]), "robot:right_shoulder_ad_ab": np.array([0.421]),
-    #"robot:right_shoulder_rotation": np.array([-1.11]), "robot:right_elbow": np.array([-0.756016]),
-    #"robot:right_hand1": np.array([0.157]), "robot:right_hand2": np.array([-0.698]), "robot:right_hand3": np.array([-0.211]),
-    #"robot:right_fingers": np.array([-0.698]),
-
-    #"robot:left_shoulder_horizontal": np.array([1.0]), "robot:left_shoulder_ad_ab": np.array([0.4]),
-    #"robot:left_shoulder_rotation": np.array([0.0]), 
-    #"robot:left_elbow": np.array([-0.349]),
-    "robot:left_hand1": np.array([-0.349]), "robot:left_hand2": np.array([0]), "robot:left_hand3": np.array([0]),
-    "robot:left_fingers": np.array([-0.698]),
-}
 """ Initial position of MIMo. Specifies initial values for all joints.
 We grabbed these values by posing MIMo using the MuJoCo simulate executable and the positional actuator file.
 We need these not just for the initial position but also resetting the position (excluding the right arm) each step.
@@ -329,7 +280,7 @@ class MIMoCustomEnv(MIMoDummyEnv):
 
     def __init__(self,
                  model_path=SELFBODY_XML,
-                 initial_qpos=SITTING_POSITION,
+                 initial_qpos={},
                  frame_skip=1,
                  proprio_params=DEFAULT_PROPRIOCEPTION_PARAMS,
                  touch_params=TOUCH_PARAMS,
@@ -370,7 +321,7 @@ class MIMoCustomEnv(MIMoDummyEnv):
                                  np.array([0.0579584, -0.00157173, 0.0566738, 0.892294, -0.0284863, -0.450353, -0.0135029]))
         #  "mimo_location": np.array([0.0579584, -0.00157173, 0.0566738, 0.892294, -0.0284863, -0.450353, -0.0135029]),
         for joint_name in initial_qpos:
-            env_utils.lock_joint(self.model, joint_name, joint_angle=initial_qpos[joint_name][0])
+            env_utils.lock_joint(self.model, joint_name, joint_angle=initial_qpos[joint_name])
         # Let sim settle for a few timesteps to allow weld and locks to settle
         self.init_sitting_qpos = self.data.qpos.copy()
         
