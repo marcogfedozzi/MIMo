@@ -692,12 +692,22 @@ def body_rot_to_body(mujoco_data, vector, body_id_source, body_id_target):
 
 
 def quat_wlast(quat: NDArray) -> NDArray:
-	"""Transforms a quaternion from [x, y, z, w] to [w, x, y, z] format."""
+	"""Transforms a quaternion from [w, x, y, z] to [x, y, z, w] format."""
 	return np.array([quat[1], quat[2], quat[3], quat[0]])
 
 def quat_wfirst(quat: NDArray) -> NDArray:
-	"""Transforms a quaternion from [w, x, y, z] to [x, y, z, w] format."""
+	"""Transforms a quaternion from [x, y, z, w] to [w, x, y, z]  format."""
 	return np.array([quat[3], quat[0], quat[1], quat[2]])
+
+
+def quat_wlast_b(quat: NDArray) -> NDArray:
+	"""Transforms a quaternion from [w, x, y, z] to [x, y, z, w] format."""
+	return np.concatenate([ quat[..., 1:], quat[..., :1]], axis=-1)
+
+def quat_wfirst_b(quat: NDArray) -> NDArray:
+	"""Transforms a quaternion from [x, y, z, w] to [w, x, y, z] format."""
+	
+	return np.concatenate([quat[..., -1:], quat[..., :-1]], axis=-1)
 
 
 # ======================== Plotting utils =========================================
