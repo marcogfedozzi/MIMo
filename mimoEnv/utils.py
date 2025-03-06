@@ -709,6 +709,28 @@ def quat_wfirst_b(quat: NDArray) -> NDArray:
 	
 	return np.concatenate([quat[..., -1:], quat[..., :-1]], axis=-1)
 
+def _inv_quat(quat: NDArray) -> NDArray:
+	_q = quat.copy()
+	_q[..., 1:] *= -1
+	return _q
+
+def world_quat_to_body(mujoco_data, world_quat: NDArray, body_id: int):
+
+	""" Converts a quaternion from the world coordinate frame to a bodies specific frame.
+
+	Args:
+		mujoco_data (mujoco.MjData): The MuJoCo data object.
+		quat (numpy.ndarray): A quaternion or array of quaternions. Shape must be either (4,) or (.., 4).
+		body_id (int): The id of the body.
+
+	Returns:
+		numpy.ndarray: Array of the same shape as the input array with the rotated quaternion.
+	"""
+	body_quat = mujoco_data.xquat[body_id]
+	# rot * body_quat = world_quat
+	# rot = world_quat * inv(body_quat)
+	rot = world_quat * _inv_quat(body_quat)
+	return rot
 
 # ======================== Plotting utils =========================================
 # =================================================================================
