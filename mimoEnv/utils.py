@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 import mujoco
 from typing import List, Dict, Tuple
 from numpy.typing import NDArray
+from scipy.spatial.transform import Rotation as R
 
 EPS = 1e-10
 
@@ -726,11 +727,13 @@ def world_quat_to_body(mujoco_data, world_quat: NDArray, body_id: int):
 	Returns:
 		numpy.ndarray: Array of the same shape as the input array with the rotated quaternion.
 	"""
-	body_quat = mujoco_data.xquat[body_id]
+	body_r = R.from_matrix(mujoco_data.xmat[body_id].reshape(3,3))
 	# rot * body_quat = world_quat
 	# rot = world_quat * inv(body_quat)
-	rot = world_quat * _inv_quat(body_quat)
-	return rot
+	wld_r = R.from_quat(quat_wlast(world_quat))
+	rot = wld_r * body_r.inv()
+	return quat_wfirst(rot.as_quat())
+	#return rot
 
 # ======================== Plotting utils =========================================
 # =================================================================================
