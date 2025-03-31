@@ -252,6 +252,7 @@ class SceneComposer:
             scene = self.scene
         with open(self.output_scene_file, 'w') as file:
             file.write(scene)
+            file.flush()
 
     def sample_asset_params(self, dirname):
 
