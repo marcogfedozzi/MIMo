@@ -6,3 +6,4 @@ mimoEnv/imgs/*
 mimoEnv/models/*
 mimoEnv/benchmarks
 mimoEnv/assets/random_explore_scene.xml
+mimoEnv/assets/pretty_room.xml

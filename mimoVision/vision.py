@@ -19,6 +19,11 @@ from functools import partial
 from numpy.typing import NDArray
 from math import floor
 
+try:
+    cv.__version__
+except NameError:
+    import cv2 as cv
+
 class Vision:
     """ Abstract base class for vision.
 
@@ -55,6 +60,14 @@ class Vision:
 
         """
         raise NotImplementedError
+
+    
+    def get_cartesian_image(self, image: NDArray, camera_name: str) -> NDArray:
+        """
+        Returns the cartesian reprojection of the edited image, if any.
+        """
+        raise NotImplementedError
+
 
 
 class SimpleVision(Vision):
@@ -285,6 +298,24 @@ class SimpleVision(Vision):
         image[1, 2] = (h - 1) / 2.0
         return image @ focal @ rotation @ translation
 
+    
+    def get_cartesian_image(self, image: NDArray, camera_name: str) -> NDArray:
+        """
+        Returns the cartesian reprojection of the logpolar image.
+        """
+        return image
+
+    @property
+    def width(self) -> int:
+        """ Returns the width of the camera with name camera_name. """
+        return {k: _v.width - _v.left for k, _v in self._viewports.items()}
+    
+    @property
+    def height(self) -> int:
+        """ Returns the width of the camera with name camera_name. """
+        return {k: _v.height - _v.bottom for k, _v in self._viewports.items()}
+
+
 
 
 class EditVision(SimpleVision):
@@ -305,10 +336,12 @@ class EditVision(SimpleVision):
         
         super().__init__(env, camera_parameters)
 
-        self._image_warp_func = {}
+        self._image_warp_func   = {}
+        self._image_dewarp_func = {}
 
         for camera in camera_parameters:
-            self._image_warp_func[camera] = partial(camera_parameters[camera]["warp_function"], **camera_parameters[camera]["warp_function_args"])
+            self._image_warp_func[camera]   = partial(camera_parameters[camera]["warp_function"], **camera_parameters[camera]["warp_function_args"])
+            self._image_dewarp_func[camera] = partial(camera_parameters[camera]["dewarp_function"], **camera_parameters[camera]["dewarp_function_args"])
         
 
         # check if func_args already specifies one set of args for each camera; otherwise copy the same args for each camera
@@ -340,10 +373,7 @@ class LogPolarVision(EditVision):
 
         # see  https://docs.opencv.org/4.x/da/d54/group__imgproc__transform.html#ga49481ab24fdaa0ffa4d3e63d14c0d5e4
 
-        try:
-            cv.__version__
-        except NameError:
-            import cv2 as cv
+
 
         self.camera_transform_parameters = {}
 
@@ -366,7 +396,15 @@ class LogPolarVision(EditVision):
                         dsize=(int(params["width"]*log_fraction), params["height"]),
                         center=(params["width"] / 2, params["height"] / 2),
                         flags=cv.INTER_LINEAR + cv.WARP_FILL_OUTLIERS + cv.WARP_POLAR_LOG
-                    ) # arguments to be passed to the function
+                    ), # arguments to be passed to the function
+
+                    dewarp_function=cv.warpPolar,
+                    dewarp_function_args=dict(
+                        maxRadius=max_radius,
+                        dsize=(params["width"], params["height"]),
+                        center=(params["width"] / 2, params["height"] / 2),
+                        flags=cv.WARP_FILL_OUTLIERS + cv.WARP_POLAR_LOG + cv.WARP_INVERSE_MAP
+                    )
                 )
             )
         
@@ -400,7 +438,19 @@ class LogPolarVision(EditVision):
         phi = np.arctan2(dy, dx) * Kangle
 
         return rho, phi
+    
+    def get_cartesian_image(self, image: NDArray, camera_name: str) -> NDArray:
+        """
+        Returns the cartesian reprojection of the logpolar image.
+        """
+        return self._image_dewarp_func[camera_name](image)
 
+    
+    @property
+    def width(self) -> int:
+        """ Returns the width of the camera with name camera_name. """
+        return {k: int((_v.width - _v.left) * self.camera_parameters[k]['logFraction']) for k, _v in self._viewports.items()}
+    
 
 
 class IncreasingActuityVision(EditVision):
