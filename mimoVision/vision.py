@@ -451,8 +451,20 @@ class LogPolarVision(EditVision):
         """ Returns the width of the camera with name camera_name. """
         return {k: int((_v.width - _v.left) * self.camera_parameters[k]['logFraction']) for k, _v in self._viewports.items()}
     
+class LogPolarNCartesianVision(LogPolarVision):
+    """
+    Returns both the logpolar and the original cartesian images.
+    """
+   
+    def get_vision_obs(self):
+        imgs =  super().get_vision_obs()
 
-
+        for camera, img in imgs.items():
+            imgs[camera] = img
+            imgs[camera+'_lp'] = self._image_warp_func[camera](img)
+        
+        return imgs
+    
 class IncreasingActuityVision(EditVision):
     """
     Like the SimpleVision class, but the image is blurred before being returned.
