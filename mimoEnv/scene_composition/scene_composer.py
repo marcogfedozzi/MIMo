@@ -120,7 +120,8 @@ class SceneComposer:
                  toy_area_frustum_deg=30, toy_distance_range=[0.5, 1.5], toy_scale_range=[0.01, 0.05],
                  toy_z_max=1.0,
                  init_mimo_pos=[0.0579584, -0.00157173, 0.0566738], init_mimo_quat=[0.70710678, 0., -0.70710678, 0., ],
-                 locked_position=False
+                 locked_position=False,
+                 simulation_timestep = 0.005
                  ):
         assert str(mimo_version) in ["v1", "v2", "1", "2"], "Invalid MIMo version"
 
@@ -163,6 +164,8 @@ class SceneComposer:
 
         self.num_toys = -1
 
+        self.simulation_timestep = simulation_timestep
+
         # --- #
 
         self.scene = ""
@@ -172,6 +175,8 @@ class SceneComposer:
         KWDS = self.KWDS
 
         replacements["MIMOVERSION"] = "v2" if self.mimo_version == "v2" else ""
+
+        replacements["TIMESTEP"] = str(self.simulation_timestep)
 
         # Load the scene XML template
         template = self.load_scene_template()
