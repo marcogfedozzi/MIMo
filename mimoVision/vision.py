@@ -556,7 +556,8 @@ class LogPolarNCartesianVision(SimpleVision, ILogPolarVision):
         w = {}
 
         for k, _v in self.logpolar_vision._viewports.items():
-            w[k] = int((_v.width - _v.left) * self.camera_parameters[self.c2l_cameramap[k]]['logFraction'])
+            klp = self.c2l_cameramap[k]
+            w[klp] = int((_v.width - _v.left) * self.camera_parameters[self.c2l_cameramap[k]]['logFraction'])
         
         
         for k, _v in self.cartesian_vision._viewports.items():
@@ -569,10 +570,14 @@ class LogPolarNCartesianVision(SimpleVision, ILogPolarVision):
     def height(self) -> int:
         """ Returns the width of the camera with name camera_name. """
         h = {}
-
-        for vision in [self.logpolar_vision, self.cartesian_vision]:
-            for k, _v in vision._viewports.items():
-                h[k] = _v.height - _v.bottom
+        
+        for k, _v in self.logpolar_vision._viewports.items():
+            klp = self.c2l_cameramap[k]
+            h[klp] = _v.height - _v.bottom
+        
+        
+        for k, _v in self.cartesian_vision._viewports.items():
+            h[k] = _v.height - _v.bottom
 
         return h    
 
