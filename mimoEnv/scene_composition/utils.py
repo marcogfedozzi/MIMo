@@ -4,17 +4,19 @@ import scipy.stats as stats
 class DoubleCosine(stats.rv_continuous):
     def __init__(self, c=np.pi, a=0, b=2*np.pi):
         super().__init__()
-        self.a = a
-        self.b = b
+
+        assert a < c < b, "c must be between a and b"
+
         self.scale = (b-a)/(2*np.pi)
-        self.loc = np.pi / self.scale + a
         self.start = a
-        self.end = 2*np.pi*self.scale
+        self.end = b 
         self.c = c
         self.scale1 = (self.c - self.start)/np.pi
         self.scale2 = (self.end - self.c)/np.pi
-        self.dist1 = stats.cosine(loc=c+self.start, scale=self.scale1)
-        self.dist2 = stats.cosine(loc=c+self.start, scale=self.scale2)
+
+
+        self.dist1 = stats.cosine(loc=c, scale=self.scale1)
+        self.dist2 = stats.cosine(loc=c, scale=self.scale2)
     
     def _pdf(self, x):
 
@@ -23,8 +25,8 @@ class DoubleCosine(stats.rv_continuous):
         c = self.c
 
         out = np.empty_like(x)
-        out[x <= c] = self.dist1.pdf(x[x <= c]) * self.scale1 * 2
-        out[x > c] = self.dist2.pdf(x[x > c]) * self.scale2 * 2
+        out[x <= c] = self.dist1.pdf(x[x <= c]) * self.scale1 / self.scale
+        out[x > c] = self.dist2.pdf(x[x > c]) * self.scale2 / self.scale
 
         return out
     
@@ -67,11 +69,11 @@ class DoubleCosine(stats.rv_continuous):
         u = np.random.uniform(0, 1, size)
         Fc1 = self.dist1.cdf(self.c)
         Fc2 = self.dist2.cdf(self.c)
-        Fc = Fc1 * self.scale1 * 2
-
+        Fc = Fc1 * self.scale1 / self.scale
+ 
         x = np.empty(size)
-        x[u <= Fc] = self.dist1.ppf(u[u <= Fc] / self.scale1 / 2)
-        x[u > Fc] = self.dist2.ppf((u[u > Fc] - Fc) / self.scale2 / 2 + Fc2) 
+        x[u <= Fc] = self.dist1.ppf(u[u <= Fc] / self.scale1 * self.scale)
+        x[u > Fc] = self.dist2.ppf((u[u > Fc] - Fc) / self.scale2 *self.scale + Fc2) 
 
         return x
 
