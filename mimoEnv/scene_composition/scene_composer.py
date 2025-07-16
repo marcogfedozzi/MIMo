@@ -558,6 +558,10 @@ class SceneComposer:
             with open(toyfile, 'r') as file:
                 toy_xml = file.read()
 
+            # TODO: the texture file can have names different from object_0(.xxx)_d.png, like
+            # Torus.xxx_d.png
+            # We need to handle that properly
+
             # Substitute <body name="*"> with <body name="*" pos="..." euler="...">
             toy_xml = re.sub(
                 r'(<body\s+name="[^"]+")>',
@@ -568,8 +572,8 @@ class SceneComposer:
 
             # Substitute <texture type="2d" name="object_0_d" file="object_0_d.png"/>
             toy_xml = re.sub(
-                r'(<texture\s+type="2d"\s+name="object_0_d"\s+file=")(object_0_d\.png)(".*?/?>)',
-                lambda m: f'{m.group(1)}{toydir}/object_0_d.png{m.group(3)}',
+                r'(<texture\s+type="2d"\s+name="object_0(?:\.\w+)?_d\"\s+file=")(object_0(?:\.\w+)?_d\.png)(".*?/?>)',
+                lambda m: f'{m.group(1)}{toydir}/{m.group(2)}{m.group(3)}',
                 toy_xml
             )
 
@@ -580,14 +584,14 @@ class SceneComposer:
                 toy_xml
             )
 
-            # Rename the texture and material names
+            # Rename the texture names like object_0(.xxx)_d but not when followed by .png
             toy_xml = re.sub(
-                r'\"object_0_d\"',
-                f'\"toy_{idx}_texture\"',
+                r'"object_0(?:\.\w+)?_d"(?!\.png)',
+                f'"toy_{idx}_texture"',
                 toy_xml
             )
             toy_xml = re.sub(
-                r'object_0_BAKED',
+                r'object_0(?:\.\w+)?_BAKED',
                 f'toy_{idx}_texture_BAKED',
                 toy_xml
             )

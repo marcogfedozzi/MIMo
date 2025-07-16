@@ -41,12 +41,12 @@
         <material name="matgeom" texture="texgeom" texuniform="true" rgba="0.8 0.6 .4 1"/>
 		<material name="matmocap" texture="texgeom" texuniform="true" rgba="0.5 0 0.5 0.5"/>
 
-		<material name="red" rgba="0.8 0 0 1" specular=".2" shininess=".8"/>
-		<material name="green" rgba="0 0.8 0 1" specular=".2" shininess=".8"/>
-		<material name="blue" rgba="0.15 0.15 1 1" specular=".2" shininess=".8"/>
-		<material name="yellow" rgba="0.7 0.7 0 1" specular=".2" shininess=".8"/>
+		<material name="red_tgt" rgba="0.8 0 0 1" specular=".2" shininess=".8"/>
+		<material name="green_tgt" rgba="0 0.8 0 1" specular=".2" shininess=".8"/>
+		<material name="blue_tgt" rgba="0.15 0.15 1 1" specular=".2" shininess=".8"/>
+		<!--material name="yellow" rgba="0.7 0.7 0 1" specular=".2" shininess=".8"/>
 		<material name="orange" rgba="0.9 0.4 0 1" specular=".2" shininess=".8"/>
-		<material name="wall" rgba="0.9 0.9 0.7 1" specular="0" shininess="0"/>
+		<material name="wall" rgba="0.9 0.9 0.7 1" specular="0" shininess="0"/-->
 
         <!-- Room -->
         <texture name="texfloor" type="2d" file="env_tex/@FLOORTEXFILENAME@"/>
@@ -84,13 +84,13 @@
 		<!-- Targets -->
 
 		<body name="head_target" mocap="true" pos=".0 .0 .0">
-			<geom type="sphere" size="0.01" contype="0" conaffinity="0" material="red" group="4"/> 
+			<geom type="sphere" size="0.01" contype="0" conaffinity="0" material="red_tgt" group="4"/> 
 		</body>
 		<body name="hand_target" mocap="true" pos=".0 .0 .0">
-			<geom type="sphere" size="0.01" contype="0" conaffinity="0" material="green" group="4"/> 
+			<geom type="sphere" size="0.01" contype="0" conaffinity="0" material="green_tgt" group="4"/> 
 		</body>
 		<body name="hand_target_1" mocap="true" pos=".0 .0 .0">
-			<geom type="sphere" size="0.01" contype="0" conaffinity="0" material="blue" group="4"/> 
+			<geom type="sphere" size="0.01" contype="0" conaffinity="0" material="blue_tgt" group="4"/> 
 		</body>
 
         <!-- Room -->

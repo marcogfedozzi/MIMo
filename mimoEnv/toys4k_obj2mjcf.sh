@@ -47,6 +47,11 @@ for OBJTYPE in "$PATH_TO_TOYS4K"/*; do
         [ -d "$OBJINSTANCE" ] || continue
         OBJINSTANCE_NAME=$(basename "$OBJINSTANCE")
 
+        if [ -f "$OBJINSTANCE/noconv.txt" ]; then
+            echo "Skipping $OBJINSTANCE due to noconv.txt"
+            continue
+        fi
+
         # Run obj2mjcf
         obj2mjcf --obj-dir "$OBJINSTANCE" --save-mjcf --add-free-joint --decompose \
             --coacd-args.preprocess-resolution 20 \
