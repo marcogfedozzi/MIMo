@@ -13,6 +13,12 @@ if [ -z "$PATH_TO_TOYS4K" ]; then
 fi
 
 
+if [ -z "$PATH_TO_MJCF" ]; then
+    echo "Please set the PATH_TO_MJCF environment variable to the path of the modified Toys4k dataset."
+    exit 1
+fi
+
+
 # Toys4k dataset structure
 #
 # objtype1
@@ -31,7 +37,7 @@ fi
 # move this folder to a new path generating a new dataset structure
 # ${PATH_TO_TOYS4K}_mjcf/OBJTYPE/OBJINSTANCE
 
-OUTPUT_DIR="${PATH_TO_TOYS4K}_mjcf"
+OUTPUT_DIR="${PATH_TO_MJCF}"
 mkdir -p "$OUTPUT_DIR"
 
 for OBJTYPE in "$PATH_TO_TOYS4K"/*; do
@@ -46,6 +52,10 @@ for OBJTYPE in "$PATH_TO_TOYS4K"/*; do
             --coacd-args.preprocess-resolution 20 \
             --coacd-args.max-convex-hull ${N_CONVEX_HULLS} \
             --coacd-args.threshold ${CONC_THRESHOLD}
+        if [ $? -ne 0 ]; then
+            echo "obj2mjcf failed for $OBJINSTANCE, skipping."
+            continue
+        fi
 
         # The MJCF folder is created inside OBJINSTANCE with the same name
         MJCF_FOLDER="$OBJINSTANCE/$OBJINSTANCE_NAME"
@@ -61,3 +71,4 @@ for OBJTYPE in "$PATH_TO_TOYS4K"/*; do
         fi
     done
 done
+
