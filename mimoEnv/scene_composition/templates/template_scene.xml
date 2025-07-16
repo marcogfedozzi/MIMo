@@ -22,6 +22,13 @@
 			</default>
 		</default>
 
+    <default class="visual">
+      <geom group="2" type="mesh" contype="0" conaffinity="0"/>
+    </default>
+    <default class="collision">
+      <geom group="3" type="mesh"/>
+    </default>
+
         <geom material="matgeom" condim="3" solimp="0.95 0.99 0.001 0.5 1" solref="0.005 1"/>
     </default>
 
@@ -54,8 +61,6 @@
         <!-- Decorations -->
         @DECOASSET@
 
-        <!-- Toys -->
-        @TOYASSET@
         
     </asset>
 
@@ -102,9 +107,6 @@
         <!-- Decorations -->
         @DECOGEOM@
 
-        <!-- Toys -->
-        @TOYBODY@
-
         <!-- Toy motion mocap -->
 		
 		<body name="toy_mocap" mocap="true" pos=".0 .0 .0">
@@ -115,6 +117,9 @@
 		</body>
 
     </worldbody>
+
+    <!-- Toys -->
+    @TOYS@
 	
 	<equality>
 		<weld name="toy_ctrl" body1="toy_mocap" body2="toy0" active="false" solimp="0.95 0.998 0.001 0.1 2" solref="0.02 1" relpose="0 0 0 1 0 0 0" anchor="0 0 0"/>

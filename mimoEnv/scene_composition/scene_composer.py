@@ -23,7 +23,7 @@ from mimoEnv.envs.mimo_env import SCENE_DIRECTORY
 from mimoEnv.scene_composition.utils import DoubleCosine, InvDist
 import re
 import mimoEnv.utils as me_utils
-
+import logging
 
 class SceneComposer:
     XYAXES = {"left": "1 0 0 0 0 1", "right": "-1 0 0 0 0 1", "front": "0 -1 0 0 0 1", "back": "0 1 0 0 0 1"}
@@ -92,20 +92,7 @@ class SceneComposer:
             },
         },
         "toys": {
-            "asset": {
-                "placeholder": "TOYASSET",
-                "material": {"name": "TOYMATNAME", "rgba": "TOYMATRGBA", "specular": "TOYMATSPEC", "shininess": "TOYMATSHINE"},
-                "mesh": {"name": "TOYMESHNAME", "file": "TOYMESHFILE", "scale": "TOYMESHSCALE"},
-            },
-            "body": {
-                "placeholder": "TOYBODY",
-                "name": "TOYBODYNAME",
-                "pos": "TOYBODYPOS",
-                "euler": "TOYBODYEULER",
-            },
-            "geom": {
-                "size": "TOYGEOMSIZE",
-            },
+            "placeholder": "TOYS",
         }
     }
     def __init__(self, mimo_version, room_size_min, room_size_max,
@@ -121,7 +108,8 @@ class SceneComposer:
                  toy_z_max=1.0,
                  init_mimo_pos=[0.0579584, -0.00157173, 0.0566738], init_mimo_quat=[0.70710678, 0., -0.70710678, 0., ],
                  locked_position=False,
-                 simulation_timestep = 0.005
+                 simulation_timestep = 0.005,
+                 toy_dataset_path=None
                  ):
         assert str(mimo_version) in ["v1", "v2", "1", "2"], "Invalid MIMo version"
 
@@ -155,7 +143,22 @@ class SceneComposer:
         self.toy_num_range = toys_num_range
         self.toy_template_asset_file = os.path.join(self.template_dir, toy_template_asset_file)
         self.toy_template_body_file = os.path.join(self.template_dir, toy_template_body_file)
-        self.toys_dir = os.path.join(SCENE_DIRECTORY, "meshes")
+
+        self.toys_dataset_dir = toy_dataset_path
+        assert self.toys_dataset_dir is not None, "Toy dataset path must be provided"
+
+        ## Create a temporary folder for toy assets
+        tmp_toys_dir = os.path.join(SCENE_DIRECTORY, "meshes_tmp")
+
+        if os.path.exists(tmp_toys_dir):
+            logging.warning(f"Temporary toys directory {tmp_toys_dir} already exists. Emptying it.")
+            for f in os.listdir(tmp_toys_dir):
+                if f.endswith('.xml'):
+                    os.remove(os.path.join(tmp_toys_dir, f))
+
+        os.makedirs(tmp_toys_dir, exist_ok=True)
+        self.tmp_toys_dir = tmp_toys_dir
+
         self.toy_area_f = np.deg2rad(toy_area_frustum_deg) # degrees to radians
         assert len(toy_distance_range) == 2 and toy_distance_range[0] <= toy_distance_range[1], "Invalid toy distance range"
         self.toy_dist_r = toy_distance_range
@@ -231,9 +234,8 @@ class SceneComposer:
 
         # TOYS
 
-        toy_assets, toy_bodies = self.spawn_toys(mimo_pos, mimo_angle, room_size)
-        replacements[KWDS["toys"]["asset"]["placeholder"]] = toy_assets
-        replacements[KWDS["toys"]["body"]["placeholder"]] = toy_bodies
+        toy_entries = self.spawn_toys(mimo_pos, mimo_angle, room_size)
+        replacements[KWDS["toys"]["placeholder"]] = toy_entries
 
         # Insert the sampled variations into the scene XML
 
@@ -474,100 +476,144 @@ class SceneComposer:
         #   sample a rotation
         #   sample a scale
         #   sample a toy from the assets/meshes folder
-        #   sample a color material from a known list
 
+        def sample_poses(params):
 
-        def load_toy_templates():
-            asset_template = ""
-            body_template = ""
+            dist_l = DoubleCosine(**params)
+            dist_r = InvDist(dist_type=DoubleCosine, **params)
 
-            with open(self.toy_template_asset_file, 'r') as file:
-                for line in file:
-                    asset_template += line+"\t\t"
-            with open(self.toy_template_body_file, 'r') as file:
-                for line in file:
-                    body_template += line+"\t\t"
+            l_toys = np.random.binomial(Nt, 0.5)
+            r_toys = Nt - l_toys
+
+            dl = dist_l.rvs(size=l_toys)
+            dr = dist_r.rvs(size=r_toys)
+
+            if l_toys == 0:
+                toy_angles = dr + mimo_angle
+            elif r_toys == 0:
+                toy_angles = dl + mimo_angle
+            else:
+                toy_angles = np.concatenate([dl, dr], axis=0) + mimo_angle
+
+            toy_dists = np.empty(Nt)
+
+            toy_angles = toy_angles % (2*np.pi)
+
+            for i, ang in enumerate(toy_angles):
+                d = self._dist_from_wall(mimo_pos, ang, room_size, margin=0.1)
+                #print(f"DEBUG: dist from wall {d} [{mimo_pos=}], [{ang=} ({mimo_angle})], [{room_size=}]")
+                toy_dists[i] = random.uniform(self.toy_dist_r[0], min(self.toy_dist_r[1], d))
+
+            toy_pos = np.zeros((Nt, 3)) + mimo_pos
+            toy_pos[:, 0] += toy_dists*np.cos(toy_angles)
+            toy_pos[:, 1] += toy_dists*np.sin(toy_angles)
+            toy_pos[:, 2] += np.random.uniform(0.1, self.toy_z_max-mimo_pos[2], Nt)
+
+            return toy_pos
             
-            return asset_template, body_template
         # --- #
 
-        KWDS = self.KWDS
         Nt = random.randint(*self.toy_num_range)
         self.num_toys = Nt
 
-        toys_list = [file for file in os.listdir(self.toys_dir) if file.endswith('.stl')]
-        toys_list = random.choices(toys_list, k=Nt)
+        # Toys4k dataset shape
+        #
+        # objtype1
+        # - objinstance1
+        # - objinstance2
+        # objtype2
+        # - objinstance1
+        # ...
 
-        asset_template, body_template = load_toy_templates()
+        # 1. sample objtypes
+
+        toys_type_list = next(os.walk(self.toys_dataset_dir))[1] # list all subdirectories in the toys_dir
+        assert len(toys_type_list) > 0, "No toy types found in the toys directory"
+        toys_type_list = random.choices(toys_type_list, k=Nt)
+
+        # 2. sample objinstances
+        toys_list = []
+        for toy_type in toys_type_list:
+            toy_type_dir = os.path.join(self.toys_dataset_dir, toy_type)
+            toy_instances = next(os.walk(toy_type_dir))[1]  # list all subdirectories (instances) in toy_type_dir
+            assert len(toy_instances) > 0, f"No toy instances found in toy type directory {toy_type_dir}"
+            sampled_instance = random.choice(toy_instances)
+            sampled_toy_dir = os.path.join(toy_type_dir, sampled_instance)
+            toys_list.append(sampled_toy_dir)
 
         params = dict(c=self.toy_area_f, a=0, b=np.pi)
-
-        dist_l = DoubleCosine(**params)
-        dist_r = InvDist(dist_type=DoubleCosine, **params)
-
-        l_toys = np.random.binomial(Nt, 0.5)
-        r_toys = Nt - l_toys
-
-        dl = dist_l.rvs(size=l_toys)
-        dr = dist_r.rvs(size=r_toys)
-
-        if l_toys == 0:
-            toy_angles = dr + mimo_angle
-        elif r_toys == 0:
-            toy_angles = dl + mimo_angle
-        else:
-            toy_angles = np.concatenate([dl, dr], axis=0) + mimo_angle
-
-        toy_dists = np.empty(Nt)
-
-        toy_angles = toy_angles % (2*np.pi)
         
-        for i, ang in enumerate(toy_angles):
-            d = self._dist_from_wall(mimo_pos, ang, room_size, margin=0.1)
-            #print(f"DEBUG: dist from wall {d} [{mimo_pos=}], [{ang=} ({mimo_angle})], [{room_size=}]")
-            toy_dists[i] = random.uniform(self.toy_dist_r[0], min(self.toy_dist_r[1], d))
-
-        toy_pos = np.zeros((Nt, 3)) + mimo_pos
-        toy_pos[:, 0] += toy_dists*np.cos(toy_angles)
-        toy_pos[:, 1] += toy_dists*np.sin(toy_angles)
-        toy_pos[:, 2] += np.random.uniform(0.1, self.toy_z_max-mimo_pos[2], Nt)
-
+        toy_pos = sample_poses(params)
 
         toy_rot = np.random.uniform(0, 2*np.pi, Nt)
 
-        toy_scales = np.random.uniform(*self.toy_scale_r, Nt) 
+        toy_scales = np.random.uniform(*self.toy_scale_r, Nt)
 
-        toy_colors = np.empty((Nt, 3), dtype=np.float32)
-        for i in range(3):
-            toy_colors[:, i] = np.random.uniform(0, 1, Nt)
-        
-        toy_specular = np.random.beta(1, 5, Nt)
-        toy_shininess = np.random.beta(1, 5, Nt)
+        toy_entries = ""
 
-        toy_assets = ""
-        toy_bodies = ""
+        for idx, toydir in enumerate(toys_list):
 
-        for i in range(Nt):
-            toyreplacements = {}
+            toyname = os.path.basename(toydir)
+            toyfile = os.path.join(toydir, toyname+".xml")
+            with open(toyfile, 'r') as file:
+                toy_xml = file.read()
 
-            toyreplacements[KWDS["toys"]["asset"]["material"]["name"]] = f"toy{i}_mat"
-            toyreplacements[KWDS["toys"]["asset"]["material"]["rgba"]] = f"{toy_colors[i][0]:.3f} {toy_colors[i][1]:.3f} {toy_colors[i][2]:.3f} 1"
-            toyreplacements[KWDS["toys"]["asset"]["material"]["specular"]] = f"{toy_specular[i]:.3f}" 
-            toyreplacements[KWDS["toys"]["asset"]["material"]["shininess"]] = f"{toy_shininess[i]:.3f}" 
+            # Substitute <body name="*"> with <body name="*" pos="..." euler="...">
+            toy_xml = re.sub(
+                r'(<body\s+name="[^"]+")>',
+                lambda m: f'<body name="toy{idx}" pos="{toy_pos[idx][0]:.3f} {toy_pos[idx][1]:.3f} {toy_pos[idx][2]:.3f}" euler="0 0 {np.rad2deg(toy_rot[idx]):.3f}">',
+                #lambda m: f'{m.group(1)} pos="{toy_pos[idx][0]:.3f} {toy_pos[idx][1]:.3f} {toy_pos[idx][2]:.3f}" euler="0 0 {np.rad2deg(toy_rot[idx]):.3f}">',
+                toy_xml
+            )
+
+            # Substitute <texture type="2d" name="object_0_d" file="object_0_d.png"/>
+            toy_xml = re.sub(
+                r'(<texture\s+type="2d"\s+name="object_0_d"\s+file=")(object_0_d\.png)(".*?/?>)',
+                lambda m: f'{m.group(1)}{toydir}/object_0_d.png{m.group(3)}',
+                toy_xml
+            )
+
+            # Substitute <mesh file="*.obj"/> with <mesh file="{toyfile}/*.obj" scale="{toy_scale} {toy_scale} {toy_scale}" />
+            toy_xml = re.sub(
+                r'<mesh\s+file="([^"]+\.obj)"\s*/?>',
+                lambda m: f'<mesh file="{toydir}/{m.group(1)}" scale="{toy_scales[idx]:.3f} {toy_scales[idx]:.3f} {toy_scales[idx]:.3f}" />',
+                toy_xml
+            )
+
+            # Rename the texture and material names
+            toy_xml = re.sub(
+                r'\"object_0_d\"',
+                f'\"toy_{idx}_texture\"',
+                toy_xml
+            )
+            toy_xml = re.sub(
+                r'object_0_BAKED',
+                f'toy_{idx}_texture_BAKED',
+                toy_xml
+            )
+
+            # Rename the freejoint
+            toy_xml = re.sub(
+                r'<freejoint/>',
+                f'<freejoint name="toy_{idx}_location"/>',
+                toy_xml
+            )
 
 
-            toyreplacements[KWDS["toys"]["asset"]["mesh"]["name"]] = f"mesh_toy{i}"
-            toyreplacements[KWDS["toys"]["asset"]["mesh"]["file"]] = toys_list[i]
-            toyreplacements[KWDS["toys"]["asset"]["mesh"]["scale"]] = f"{toy_scales[i]:.3f} {toy_scales[i]:.3f} {toy_scales[i]:.3f}"
+            # Remove the text between the first <default> and the last </default>
+            start = toy_xml.find('<default>')
+            end = toy_xml.rfind('</default>')
+            if start != -1 and end != -1 and end > start:
+                toy_xml = toy_xml[:start] + toy_xml[end + len('</default>'):]
 
-            toyreplacements[KWDS["toys"]["body"]["name"]] = f"toy{i}"
-            toyreplacements[KWDS["toys"]["body"]["pos"]] = f"{toy_pos[i][0]:.3f} {toy_pos[i][1]:.3f} {toy_pos[i][2]:.3f}"
-            toyreplacements[KWDS["toys"]["body"]["euler"]] = f"0 0 {np.rad2deg(toy_rot[i]):.3f}"
+            # Write the modified toy_xml into a new file inside self.toys_dir
+            toy_xml_filename = os.path.join(self.tmp_toys_dir, f"toy_{idx}.xml")
+            with open(toy_xml_filename, 'w') as f:
+                f.write(toy_xml)
 
-            toy_assets += self.replace_placeholders(asset_template, toyreplacements) + "\n\n\t\t"
-            toy_bodies += self.replace_placeholders(body_template, toyreplacements) + "\n\n\t\t"
+            toy_entries += f'<include file="meshes_tmp/toy_{idx}.xml"/>\n\t'
 
-        return toy_assets, toy_bodies
+        return toy_entries
     
     def _check_position_in_room(self, pos, room_size, margin):
         return np.all(np.abs(pos) < np.array(room_size) - margin)
