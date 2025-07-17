@@ -527,19 +527,43 @@ class SceneComposer:
 
         # 1. sample objtypes
 
-        toys_type_list = next(os.walk(self.toys_dataset_dir))[1] # list all subdirectories in the toys_dir
-        assert len(toys_type_list) > 0, "No toy types found in the toys directory"
-        toys_type_list = random.choices(toys_type_list, k=Nt)
+        def sample_random_toys(Nt):
+            toys_type_list = next(os.walk(self.toys_dataset_dir))[1] # list all subdirectories in the toys_dir
+            assert len(toys_type_list) > 0, "No toy types found in the toys directory"
+            toys_type_list = random.choices(toys_type_list, k=Nt)
 
-        # 2. sample objinstances
-        toys_list = []
-        for toy_type in toys_type_list:
-            toy_type_dir = os.path.join(self.toys_dataset_dir, toy_type)
-            toy_instances = next(os.walk(toy_type_dir))[1]  # list all subdirectories (instances) in toy_type_dir
-            assert len(toy_instances) > 0, f"No toy instances found in toy type directory {toy_type_dir}"
-            sampled_instance = random.choice(toy_instances)
-            sampled_toy_dir = os.path.join(toy_type_dir, sampled_instance)
-            toys_list.append(sampled_toy_dir)
+            # 2. sample objinstances
+            toys_list = []
+            for toy_type in toys_type_list:
+                toy_type_dir = os.path.join(self.toys_dataset_dir, toy_type)
+                toy_instances = next(os.walk(toy_type_dir))[1]  # list all subdirectories (instances) in toy_type_dir
+                assert len(toy_instances) > 0, f"No toy instances found in toy type directory {toy_type_dir}"
+                sampled_instance = random.choice(toy_instances)
+                sampled_toy_dir = os.path.join(toy_type_dir, sampled_instance)
+                toys_list.append(sampled_toy_dir)
+
+            return toys_list
+        
+        def sample_ordered_toys(Nt, startfrom=0):
+            toys_list = []
+            toys_type_dirs = next(os.walk(self.toys_dataset_dir))[1]  # list all subdirectories in the toys_dir
+            assert len(toys_type_dirs) > 0, "No toy types found in the toys directory"
+            count = 0
+            for i, toy_type in enumerate(toys_type_dirs):
+                if i < startfrom:
+                    continue
+                toy_type_dir = os.path.join(self.toys_dataset_dir, toy_type)
+                toy_instances = next(os.walk(toy_type_dir))[1]  # list all subdirectories (instances) in toy_type_dir
+                for instance in toy_instances:
+                    if count >= Nt:
+                        break
+                    toys_list.append(os.path.join(toy_type_dir, instance))
+                    count += 1
+                if count >= Nt:
+                    break
+            return toys_list
+
+        toys_list = sample_random_toys(Nt, startfrom=0)
 
         params = dict(c=self.toy_area_f, a=0, b=np.pi)
         
@@ -558,21 +582,23 @@ class SceneComposer:
             with open(toyfile, 'r') as file:
                 toy_xml = file.read()
 
-            # TODO: the texture file can have names different from object_0(.xxx)_d.png, like
-            # Torus.xxx_d.png
-            # We need to handle that properly
+
+            texfilename_match = re.search(r'file="([^"]+)_d\.png"', toy_xml)
+            if texfilename_match:
+                texfilename = texfilename_match.group(1)
+            else:
+                texfilename = "object_0"
 
             # Substitute <body name="*"> with <body name="*" pos="..." euler="...">
             toy_xml = re.sub(
                 r'(<body\s+name="[^"]+")>',
                 lambda m: f'<body name="toy{idx}" pos="{toy_pos[idx][0]:.3f} {toy_pos[idx][1]:.3f} {toy_pos[idx][2]:.3f}" euler="0 0 {np.rad2deg(toy_rot[idx]):.3f}">',
-                #lambda m: f'{m.group(1)} pos="{toy_pos[idx][0]:.3f} {toy_pos[idx][1]:.3f} {toy_pos[idx][2]:.3f}" euler="0 0 {np.rad2deg(toy_rot[idx]):.3f}">',
                 toy_xml
             )
 
             # Substitute <texture type="2d" name="object_0_d" file="object_0_d.png"/>
             toy_xml = re.sub(
-                r'(<texture\s+type="2d"\s+name="object_0(?:\.\w+)?_d\"\s+file=")(object_0(?:\.\w+)?_d\.png)(".*?/?>)',
+                fr'(<texture\s+type="2d"\s+name="{texfilename}(?:\.\w+)?_d\"\s+file=")({texfilename}(?:\.\w+)?_d\.png)(".*?/?>)',
                 lambda m: f'{m.group(1)}{toydir}/{m.group(2)}{m.group(3)}',
                 toy_xml
             )
@@ -586,13 +612,15 @@ class SceneComposer:
 
             # Rename the texture names like object_0(.xxx)_d but not when followed by .png
             toy_xml = re.sub(
-                r'"object_0(?:\.\w+)?_d"(?!\.png)',
+                rf'"{texfilename}(?:\.\w+)?_d"(?!\.png)',
                 f'"toy_{idx}_texture"',
                 toy_xml
             )
+
+
             toy_xml = re.sub(
-                r'object_0(?:\.\w+)?_BAKED',
-                f'toy_{idx}_texture_BAKED',
+                r'(<.*(?:material name=|material=)")([^"]+)(".*/?>)',
+                lambda m: f'{m.group(1)}toy_{idx}_{m.group(2)}{m.group(3)}',
                 toy_xml
             )
 
@@ -602,7 +630,6 @@ class SceneComposer:
                 f'<freejoint name="toy_{idx}_location"/>',
                 toy_xml
             )
-
 
             # Remove the text between the first <default> and the last </default>
             start = toy_xml.find('<default>')
