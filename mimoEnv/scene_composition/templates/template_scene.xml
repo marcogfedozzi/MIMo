@@ -49,13 +49,13 @@
 		<material name="wall" rgba="0.9 0.9 0.7 1" specular="0" shininess="0"/-->
 
         <!-- Room -->
-        <texture name="texfloor" type="2d" file="env_tex/@FLOORTEXFILENAME@"/>
+        <texture name="texfloor" type="2d" file="@FLOORTEXFILENAME@"/>
         <material name="matfloor" texture="texfloor" texrepeat="1 1" texuniform="false" @FLOORMATPARAMS@/>
 
-        <texture name="texwall" type="2d" file="env_tex/@WALLTEXFILENAME@"/>
+        <texture name="texwall" type="2d" file="@WALLTEXFILENAME@"/>
         <material name="matwall" texture="texwall" texrepeat="1 1" texuniform="false" @WALLMATPARAMS@/>
 
-        <texture name="texceil" type="2d" file="env_tex/@CEILTEXFILENAME@"/>
+        <texture name="texceil" type="2d" file="@CEILTEXFILENAME@"/>
         <material name="matceil" texture="texceil" texrepeat="1 1" texuniform="false" @CEILMATPARAMS@/>
         
         <!-- Decorations -->

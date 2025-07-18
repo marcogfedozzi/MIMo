@@ -1,2 +1,2 @@
-<texture name="@DECOTEXNAME@" type="2d" file="env_tex/@DECOTEXFILENAME@"/>
+<texture name="@DECOTEXNAME@" type="2d" file="@DECOTEXFILENAME@"/>
 <material name="@DECOMATNAME@" texture="@DECOTEXNAME@" texrepeat="1 1" texuniform="false" @DECOMATPARAMS@/>

@@ -109,7 +109,9 @@ class SceneComposer:
                  init_mimo_pos=[0.0579584, -0.00157173, 0.0566738], init_mimo_quat=[0.70710678, 0., -0.70710678, 0., ],
                  locked_position=False,
                  simulation_timestep = 0.005,
-                 toy_dataset_path=None
+                 toy_dataset_path=None,
+                 wallparams={},
+                 asset_dir=None
                  ):
         assert str(mimo_version) in ["v1", "v2", "1", "2"], "Invalid MIMo version"
 
@@ -132,6 +134,10 @@ class SceneComposer:
 
         self.init_mimo_pos = init_mimo_pos
         self.init_mimo_quat = init_mimo_quat
+
+        self.asset_dir = asset_dir
+
+        self.wallparams = wallparams
 
         # MIMo
 
@@ -187,16 +193,12 @@ class SceneComposer:
         # ASSETS sampling
         
         for dirname in KWDS["room"]:
-            params = self.sample_asset_params(dirname)
-
             for key in KWDS["room"][dirname]["asset"]:
-                for subkey in KWDS["room"][dirname]["asset"][key]:
-                    # If the value is a dictionary parse it as a string formatted as "key1=value1 key2=value2 ..."
-                    if isinstance(params[key][subkey], dict):
-                        replacements[KWDS["room"][dirname]["asset"][key][subkey]] = " ".join([f"{k}=\"{v}\"" for k, v in params[key][subkey].items()])
-                    else:
-                        replacements[KWDS["room"][dirname]["asset"][key][subkey]] = params[key][subkey]
-        
+                    if key == "texture":
+                        replacements[KWDS["room"][dirname]["asset"][key]["filename"]] = self.sample_room_texture(dirname)
+                    elif key == "material":
+                        replacements[KWDS["room"][dirname]["asset"][key]["params"]] = " ".join([f"{k}=\"{v}\"" for k, v in self.sample_room_texture_material(dirname).items()])
+
         # BODY sampling
         room_size = self.sample_room_size()
         geom = self.sample_body_params(room_size)
@@ -274,6 +276,19 @@ class SceneComposer:
         with open(os.path.join(DIR_NAME, sampled_file), 'r') as file:
             params = json.load(file)
         return params
+    
+    def sample_room_texture(self, walltype):
+
+        walldir = os.path.join(self.asset_dir, walltype) 
+        files = os.listdir(walldir)
+        # Sample one of the files
+        sampled_file = random.choice(files)
+        return os.path.join(walldir, sampled_file)
+    
+    def sample_room_texture_material(self, walltype):
+
+        return {k: random.uniform(v["min"], v["max"]) for k, v in self.wallparams[walltype]['material'].items()}
+
     
     def sample_room_size(self):
         # Sample the dimensions of the room
@@ -379,8 +394,8 @@ class SceneComposer:
         ############################
 
         KWDS = self.KWDS
-        
-        deco_files = os.listdir(os.path.join(self.base_dir, "scene_chunks", "decoration"))
+        decodir = os.path.join(self.asset_dir, "deco")
+        deco_files = os.listdir(decodir)
         Nd = random.randint(1, len(deco_files))
 
         # shuffle deco_files
@@ -402,10 +417,10 @@ class SceneComposer:
         deco_assets = ""
         deco_geoms = ""
 
+        params = self.wallparams["deco"]
+
 
         for (deco, sr) in zip(deco_list, sampled_regions):
-            with open(os.path.join(self.base_dir, "scene_chunks", "decoration", deco), 'r') as file:
-                params = json.load(file)
 
             side, reg = sr
 
@@ -422,7 +437,7 @@ class SceneComposer:
             decosize_x = random.uniform(mindecosize, maxdecosize)/2
 
 
-            decosize_y = decosize_x / params["geom"]["aspect_ratio"]
+            decosize_y = decosize_x # / params["geom"]["aspect_ratio"] # All imgs assumed square
 
             decopos = [0,0,0]
             decopos[d] = wallpos[d] + (-1)**(side in ['left', 'front'])*0.001
@@ -434,9 +449,9 @@ class SceneComposer:
             decoreplacements = {}
 
             decoreplacements[KWDS["deco"]["asset"]["texture"]["name"]] = f"texdeco{i}"
-            decoreplacements[KWDS["deco"]["asset"]["texture"]["filename"]] = params["texture"]["filename"]
+            decoreplacements[KWDS["deco"]["asset"]["texture"]["filename"]] = os.path.join(decodir,deco)
             decoreplacements[KWDS["deco"]["asset"]["material"]["name"]] = f"matdeco{i}"
-            decoreplacements[KWDS["deco"]["asset"]["material"]["params"]] = " ".join([f"{k}=\"{v}\"" for k, v in  params["material"]["params"].items()])
+            decoreplacements[KWDS["deco"]["asset"]["material"]["params"]] = " ".join([f"{k}=\"{random.uniform(v['min'],v['max'])}\"" for k, v in  params["material"].items()])
 
             decoreplacements[KWDS["deco"]["geom"]["name"]] = f"deco{i}"
             decoreplacements[KWDS["deco"]["geom"]["size"]] = f"{decosize_x:.3f} {decosize_y:.3f} 0.1"
@@ -563,7 +578,7 @@ class SceneComposer:
                     break
             return toys_list
 
-        toys_list = sample_random_toys(Nt, startfrom=0)
+        toys_list = sample_random_toys(Nt)
 
         params = dict(c=self.toy_area_f, a=0, b=np.pi)
         

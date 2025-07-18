@@ -1,4 +1,0 @@
-{
-    "texture": {"filename": "floor3.png"},
-    "material": {"params": {"specular": 0.6, "shininess": 0.8}}
-}
