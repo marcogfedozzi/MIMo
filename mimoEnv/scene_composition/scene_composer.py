@@ -73,8 +73,8 @@ class SceneComposer:
             },
         },
         "lights": {
-            "static": {"pos": "LIGHTSPOS"},
-            "follow": {"pos": "LIGHTFPOS"},
+            "static": {"pos": "LIGHTSPOS", "ambient": "LIGHTSAMBIENT", "diffuse": "LIGHTSDIFFUSE", "specular": "LIGHTSSPECULAR"},
+            "ambient": {"pos": "LIGHTAPOS", "ambient": "LIGHTAAMBIENT", "diffuse": "LIGHTADIFFUSE", "specular": "LIGHTASPECULAR"},
         },
         "deco":
         {
@@ -111,6 +111,7 @@ class SceneComposer:
                  simulation_timestep = 0.005,
                  toy_dataset_path=None,
                  wallparams={},
+                 lightparams={},
                  asset_dir=None
                  ):
         assert str(mimo_version) in ["v1", "v2", "1", "2"], "Invalid MIMo version"
@@ -175,6 +176,10 @@ class SceneComposer:
 
         self.simulation_timestep = simulation_timestep
 
+        # Lights
+
+        self.lightparams = lightparams
+
         # --- #
 
         self.scene = ""
@@ -213,8 +218,13 @@ class SceneComposer:
 
         # LIGHTS
         for key in KWDS["lights"]:
-            replacements[KWDS["lights"][key]["pos"]] = self.sample_light_params(room_size)
+            replacements[KWDS["lights"][key]["pos"]] =  self.sample_light_pos(room_size, center=(key == "ambient"))
+            
+            prms = self.sample_light_params(self.lightparams[key])
+            for pname, pvalue in prms.items():
+                replacements[KWDS["lights"][key][pname]] = " ".join([f'{pvalue:.3f}',]*3)
 
+        
         # DECORATIONS
         deco_assets, deco_geoms = self.generate_decorations(geom)
         replacements[KWDS["deco"]["asset"]["placeholder"]] = deco_assets
@@ -330,13 +340,28 @@ class SceneComposer:
 
         return geom
 
-    def sample_light_params(self, room_size):
-        z = random.uniform(0.8*room_size[2], room_size[2])
+    def sample_light_pos(self, room_size, center: bool = False):
+        z = 0.95*room_size[2]
 
-        x = random.uniform(-room_size[0]/2, room_size[0]/2)
-        y = random.uniform(-room_size[1]/2, room_size[1]/2)
+        if center:
+            x = 0.0
+            y = 0.0
+        else:
+            x = random.uniform(-room_size[0]/2, room_size[0]/2)
+            y = random.uniform(-room_size[1]/2, room_size[1]/2)
 
         return f"{x} {y} {z}"
+    
+
+    def sample_light_params(self, lightparams):
+        d = {}
+        for k, v in lightparams.items():
+            if isinstance(v, dict):
+                d[k] = {kk: random.uniform(vv["min"], vv["max"]) for kk, vv in v.items()}
+            else:
+                d[k] = random.uniform(v["min"], v["max"])
+
+        return d
 
     def generate_decorations(self, geom):
         # - select the number of decorations Nd

@@ -11,6 +11,7 @@
         <rgba haze="0.15 0.25 0.35 0.5"/>
         <quality shadowsize="4096"/>
         <global offwidth="800" offheight="800"/>
+		<headlight active="0"/>
     </visual>
 
     <default>
@@ -72,8 +73,10 @@
 
     <worldbody>
 
-        <light directional="false" ambient=".7 .7 .7" specular="0 0 0" pos="@LIGHTFPOS@" dir="0 0 -1" castshadow="false"/>
-        <light mode="targetbodycom" target="upper_body" directional="false" diffuse=".4 .4 .4" specular="0.3 0.3 0.3" pos="@LIGHTSPOS@" dir="0 0 -1"/>
+        <light directional="false" ambient="@LIGHTSAMBIENT@" diffuse="@LIGHTSDIFFUSE@"  specular="@LIGHTSSPECULAR@"  pos="@LIGHTSPOS@" dir="0 0 -1" castshadow="false"/>
+        <light directional="true" ambient="@LIGHTAAMBIENT@" diffuse="@LIGHTADIFFUSE@"  specular="@LIGHTASPECULAR@" pos="@LIGHTAPOS@" dir=" 0 0 -1" castshadow="false"/>
+
+        <!--light mode="targetbodycom" target="upper_body" directional="false" diffuse=".4 .4 .4" specular="0.3 0.3 0.3" pos="@LIGHTSPOS@" dir="0 0 -1"/-->
 	
 		<!-- The location and orientation of the base model can be set using this body -->
 		<body name="mimo_location" pos="@MIMOPOS@" quat="@MIMOQUAT@">
