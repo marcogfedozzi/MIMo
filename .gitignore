@@ -9,3 +9,9 @@ mimoEnv/benchmarks
 mimoGrowth/log.txt
 test*
 models*
+dist/
+build/
+
+uv.lock
+.venv/
+
