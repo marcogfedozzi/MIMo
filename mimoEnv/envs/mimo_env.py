@@ -372,8 +372,16 @@ class MIMoEnv(MujocoEnv, utils.EzPickle):
         self._set_observation_space()
 
     def _initialize_simulation(self,):
-        super()._initialize_simulation()
+        # WARN: model and data will be overwritten with the return
+        # from this method: already assigning them here shouldn't cause any issues,
+        # but keep in mind this is not ideal; it would be better to avoid calling
+        # 'self.model' and 'self.data' from this method, resorting to using
+        # 'model' and 'data' instead. 
+        self.model, self.data = super()._initialize_simulation()
 
+        # WARN: avoid using self.dt here, as it depends on self.model,
+        # which will be initialized only at the exit of this method;
+        #fps = int(np.round(1 / (self.model.opt.timestep * self.frame_skip)))
         fps = int(np.round(1 / self.dt))
         self.metadata = {
             "render_modes": [
@@ -393,6 +401,8 @@ class MIMoEnv(MujocoEnv, utils.EzPickle):
         self._set_initial_position(self._initial_qpos)
 
         self.actuation_model = self.actuation_model(self, self.mimo_actuators)
+
+        return self.model, self.data
 
     @property
     def n_actuators(self):
