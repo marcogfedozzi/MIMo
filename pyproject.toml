@@ -46,4 +46,4 @@ Repository = "https://github.com/trieschlab/MIMo/"
 where = ["."]
 
 [tool.setuptools.package-data]
-'src' = ['*.json']
+'.' = ['*.json']
