@@ -39,3 +39,13 @@ Repository = "https://github.com/trieschlab/MIMo/"
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+# Include any .xml and .json files that are inside the MIMo package (recursively).
+# Adjust the package name ("MIMo") if your actual Python package dir has a different name.
+# The XML/JSON files live under the Python package `mimoEnv` (and its subpackages).
+# Use recursive globs so files in subfolders are included in the wheel/sdist.
+"mimoEnv" = ["**/*.xml", "**/*.json", "**/*.png"]
