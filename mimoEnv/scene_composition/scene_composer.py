@@ -24,6 +24,8 @@ from mimoEnv.scene_composition.utils import DoubleCosine, InvDist
 import re
 import mimoEnv.utils as me_utils
 import logging
+import tempfile
+import shutil
 
 class SceneComposer:
     XYAXES = {"left": "1 0 0 0 0 1", "right": "-1 0 0 0 0 1", "front": "0 -1 0 0 0 1", "back": "0 1 0 0 0 1"}
@@ -112,7 +114,8 @@ class SceneComposer:
                  toy_dataset_path=None,
                  wallparams={},
                  lightparams={},
-                 asset_dir=None
+                 asset_dir=None,
+                 use_temp_files=True
                  ):
         assert str(mimo_version) in ["v1", "v2", "1", "2"], "Invalid MIMo version"
 
@@ -128,7 +131,33 @@ class SceneComposer:
         self.template_dir = template_dir if template_dir[0] == "/" else os.path.join(self.base_dir, template_dir)
 
         self.template_file = os.path.join(self.template_dir, template_scene_file)
-        self.output_scene_file = os.path.join(SCENE_DIRECTORY, output_scene_file)
+        
+        if not use_temp_files:
+            self.output_scene_file = os.path.join(SCENE_DIRECTORY, output_scene_file)
+            tmp_toys_dir = os.path.join(SCENE_DIRECTORY, "meshes")
+            
+            if os.path.exists(tmp_toys_dir):
+                logging.warning(f"Temporary toys directory {tmp_toys_dir} already exists. Emptying it.")
+                for f in os.listdir(tmp_toys_dir):
+                    if f.endswith('.xml'):
+                        os.remove(os.path.join(tmp_toys_dir, f))
+
+            self._cleanup = lambda : None
+        else:
+            _tmp_dir = tempfile.mkdtemp()
+            logging.info(f"Using temporary location {_tmp_dir} for scene generation.")
+
+            self.output_scene_file = os.path.join(_tmp_dir, output_scene_file)
+            tmp_toys_dir = os.path.join(_tmp_dir, "meshes")
+
+            # Copy resources referred to other XMLs in the temp directory.
+            shutil.copytree(os.path.join(SCENE_DIRECTORY, "mimo"), os.path.join(_tmp_dir, "mimo"))
+            shutil.copytree(os.path.join(SCENE_DIRECTORY, "tex"), os.path.join(_tmp_dir, "tex"))
+
+            self._cleanup = self._remove_tmp_files
+        
+        os.makedirs(tmp_toys_dir, exist_ok=True)
+        self.tmp_toys_dir = tmp_toys_dir
 
         self.deco_template_asset_file = os.path.join(self.template_dir, deco_template_asset_file)
         self.deco_template_geom_file = os.path.join(self.template_dir, deco_template_geom_file)
@@ -154,18 +183,6 @@ class SceneComposer:
         self.toys_dataset_dir = toy_dataset_path
         assert self.toys_dataset_dir is not None, "Toy dataset path must be provided"
 
-        ## Create a temporary folder for toy assets
-        tmp_toys_dir = os.path.join(SCENE_DIRECTORY, "meshes_tmp")
-
-        if os.path.exists(tmp_toys_dir):
-            logging.warning(f"Temporary toys directory {tmp_toys_dir} already exists. Emptying it.")
-            for f in os.listdir(tmp_toys_dir):
-                if f.endswith('.xml'):
-                    os.remove(os.path.join(tmp_toys_dir, f))
-
-        os.makedirs(tmp_toys_dir, exist_ok=True)
-        self.tmp_toys_dir = tmp_toys_dir
-
         self.toy_area_f = np.deg2rad(toy_area_frustum_deg) # degrees to radians
         assert len(toy_distance_range) == 2 and toy_distance_range[0] <= toy_distance_range[1], "Invalid toy distance range"
         self.toy_dist_r = toy_distance_range
@@ -183,6 +200,17 @@ class SceneComposer:
         # --- #
 
         self.scene = ""
+
+    def _remove_tmp_files(self):
+        if os.path.exists(self.tmp_toys_dir):
+            shutil.rmtree(self.tmp_toys_dir)
+        if os.path.exists(self.output_scene_file):
+            os.remove(self.output_scene_file)
+    
+    def __del__(self):
+        """Perform cleanup of temporary files if necessary."""
+        self._cleanup()
+
 
     def make_scene(self):
         replacements = {}
@@ -269,9 +297,66 @@ class SceneComposer:
     def write_scene_file(self, scene=None):
         if scene is None:
             scene = self.scene
+
+        self._move_included_files(scene)
+
         with open(self.output_scene_file, 'w') as file:
             file.write(scene)
             file.flush()
+
+    def _move_included_files(self, scene=None):
+        """Parse the scene looking for 'include' statements and copy the included files 
+        to the output directory, if not present."""
+
+        if scene is None:
+            scene = self.scene
+
+        include_pattern = r'<include\s+file="([^"]+)"\s*/>'
+        includes = re.findall(include_pattern, scene)
+
+        logging.debug(f"Included files found: {includes}")
+
+
+        for inc in includes:
+            if os.path.isabs(inc):
+                continue
+
+            logging.debug(f"Included file {inc} is not an absolute path. Assuming relative to template directory.")
+
+            inc_path = os.path.join(SCENE_DIRECTORY, inc)
+            output_dir = os.path.dirname(self.output_scene_file)
+
+            found = False
+
+            for base_path in [SCENE_DIRECTORY, self.template_dir]:
+                test_path = os.path.join(base_path, inc)
+                if os.path.exists(test_path):
+                    inc_path = test_path
+                    found = True
+                    break
+                else:
+                    logging.debug(f"Included file {inc} not found in {base_path}.")
+                
+            
+            if not found:
+                inc_path = os.path.join(output_dir, inc)
+                if os.path.exists(inc_path):
+                    found = True 
+                    logging.debug(f"Included file {inc} found in output directory {output_dir}.")
+                    continue
+
+                logging.warning(f"Included file {inc} does not exist in SCENE_DIRECTORY, template, or output directory directory. Skipping copy.")
+                continue
+            
+            logging.info(os.path.join(output_dir, inc))
+            if output_dir in inc_path and os.path.exists(inc_path):
+                logging.debug(f"Included file {inc} already exists in output directory. Skipping copy.")
+                continue
+
+            logging.info(f"Copying included file {inc_path} to output directory {output_dir}.")
+            os.makedirs(os.path.join(output_dir, os.path.dirname(inc)), exist_ok=True)
+            shutil.copy(inc_path, os.path.join(output_dir, inc))
+
 
     def sample_asset_params(self, dirname):
 
@@ -682,7 +767,11 @@ class SceneComposer:
             with open(toy_xml_filename, 'w') as f:
                 f.write(toy_xml)
 
-            toy_entries += f'<include file="meshes_tmp/toy_{idx}.xml"/>\n\t'
+            logging.debug(f"Written toy XML to {toy_xml_filename}")
+
+            rel_toy_xml_filename = os.path.relpath(toy_xml_filename, start=os.path.dirname(self.output_scene_file))
+
+            toy_entries += f'<include file="{rel_toy_xml_filename}"/>\n\t'
 
         return toy_entries
     
