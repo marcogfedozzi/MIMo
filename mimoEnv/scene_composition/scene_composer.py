@@ -18,6 +18,7 @@ import os
 import random
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+from functools import partial
 
 from mimoEnv.envs.mimo_env import SCENE_DIRECTORY
 from mimoEnv.scene_composition.utils import DoubleCosine, InvDist
@@ -26,6 +27,7 @@ import mimoEnv.utils as me_utils
 import logging
 import tempfile
 import shutil
+import atexit
 
 class SceneComposer:
     XYAXES = {"left": "1 0 0 0 0 1", "right": "-1 0 0 0 0 1", "front": "0 -1 0 0 0 1", "back": "0 1 0 0 0 1"}
@@ -145,16 +147,43 @@ class SceneComposer:
             self._cleanup = lambda : None
         else:
             _tmp_dir = tempfile.mkdtemp()
+            # store tmp path for external inspection if needed
+            self._tmp_dir = _tmp_dir
+            # make cleanup callable and register for interpreter exit as a safety net
+            self._cleanup = partial(self._remove_tmp_files, tmp_path=_tmp_dir)
+            try:
+                atexit.register(self._cleanup)
+            except Exception:
+                # registration should rarely fail; ignore to keep behavior robust
+                logging.debug("atexit registration failed for SceneComposer cleanup")
+
             logging.info(f"Using temporary location {_tmp_dir} for scene generation.")
 
             self.output_scene_file = os.path.join(_tmp_dir, output_scene_file)
             tmp_toys_dir = os.path.join(_tmp_dir, "meshes")
 
             # Copy resources referred to other XMLs in the temp directory.
-            shutil.copytree(os.path.join(SCENE_DIRECTORY, "mimo"), os.path.join(_tmp_dir, "mimo"))
-            shutil.copytree(os.path.join(SCENE_DIRECTORY, "tex"), os.path.join(_tmp_dir, "tex"))
+            # Copying entire asset trees can be large; if this fails we still
+            # keep the cleanup registered so partial content won't linger.
+            # Try creating symlinks to the asset trees to avoid duplicating large files.
+            # Fall back to copytree if symlink creation fails (e.g., on filesystems
+            # where symlinks are not allowed).
+            mimo_src = os.path.join(SCENE_DIRECTORY, "mimo")
+            tex_src = os.path.join(SCENE_DIRECTORY, "tex")
+            mimo_dst = os.path.join(_tmp_dir, "mimo")
+            tex_dst = os.path.join(_tmp_dir, "tex")
 
-            self._cleanup = self._remove_tmp_files
+            for src, dst in ((mimo_src, mimo_dst), (tex_src, tex_dst)):
+                try:
+                    os.symlink(src, dst)
+                    logging.info(f"Created symlink {dst} -> {src}")
+                except Exception as e:
+                    logging.warning(f"Symlink {dst} -> {src} failed ({e}), falling back to copytree")
+                    try:
+                        shutil.copytree(src, dst)
+                    except Exception as ee:
+                        logging.warning(f"Failed to copy {src} to {dst}: {ee}")
+
         
         os.makedirs(tmp_toys_dir, exist_ok=True)
         self.tmp_toys_dir = tmp_toys_dir
@@ -201,14 +230,19 @@ class SceneComposer:
 
         self.scene = ""
 
-    def _remove_tmp_files(self):
-        if os.path.exists(self.tmp_toys_dir):
-            shutil.rmtree(self.tmp_toys_dir)
-        if os.path.exists(self.output_scene_file):
-            os.remove(self.output_scene_file)
-    
+    def _remove_tmp_files(self, tmp_path):
+        try:
+            if os.path.exists(tmp_path):
+                shutil.rmtree(tmp_path)
+        except Exception as e:
+            logging.warning(f"Error while removing temporary path {tmp_path}: {e}")
+
     def __del__(self):
         """Perform cleanup of temporary files if necessary."""
+        self.close()
+
+    def close(self):
+        """Public method to perform cleanup of temporary files if necessary."""
         self._cleanup()
 
 
@@ -328,6 +362,13 @@ class SceneComposer:
 
             found = False
 
+            inc_path = os.path.join(output_dir, inc)
+            
+            if os.path.exists(inc_path):
+                found = True 
+                logging.debug(f"Included file {inc} found in output directory {output_dir}.")
+                continue
+
             for base_path in [SCENE_DIRECTORY, self.template_dir]:
                 test_path = os.path.join(base_path, inc)
                 if os.path.exists(test_path):
@@ -336,14 +377,8 @@ class SceneComposer:
                     break
                 else:
                     logging.debug(f"Included file {inc} not found in {base_path}.")
-                
             
             if not found:
-                inc_path = os.path.join(output_dir, inc)
-                if os.path.exists(inc_path):
-                    found = True 
-                    logging.debug(f"Included file {inc} found in output directory {output_dir}.")
-                    continue
 
                 logging.warning(f"Included file {inc} does not exist in SCENE_DIRECTORY, template, or output directory directory. Skipping copy.")
                 continue
