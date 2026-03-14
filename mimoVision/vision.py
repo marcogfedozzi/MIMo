@@ -196,8 +196,24 @@ class SimpleVision(Vision):
 
         point  = np.zeros(3, dtype=np.float64)
         geomid = np.zeros(1, dtype=np.int32)
-        flexid = np.zeros(1, dtype=np.int32)
+        #flexid = np.zeros(1, dtype=np.int32)
         skinid = np.zeros(1, dtype=np.int32)
+
+        # Set the desired camera as the one from which MuJoCo will update the scene
+        cam_id = self.env.model.camera(camera_name).id
+        rgb_viewer.cam.type = mujoco.mjtCamera.mjCAMERA_FIXED
+        rgb_viewer.cam.fixedcamid = cam_id
+
+        # Update the mathematical scene state, without rendering or passing data to the GPU
+        mujoco.mjv_updateScene(
+            self.env.model,
+            self.env.data,
+            rgb_viewer.vopt,
+            mujoco.MjvPerturb(), # Dummy perturb object
+            rgb_viewer.cam,
+            mujoco.mjtCatBit.mjCAT_ALL.value,
+            rgb_viewer.scn
+        )
 
         selid = mujoco.mjv_select(self.env.model, self.env.data,  rgb_viewer.vopt,
             aspectratio=w/h, relx=x/w, rely=y/h,
@@ -244,10 +260,7 @@ class SimpleVision(Vision):
         self.env.camera_id = old_cam_id
         rgb_viewer.viewport = old_viewport
 
-
-        
-
-        return np.array([floor(x), floor(y)], dtype=np.int32)
+        return np.array([round(x), round(y)], dtype=np.int32)
 
     
     def _compute_camera_matrix(self):
@@ -257,26 +270,11 @@ class SimpleVision(Vision):
         # from the scene data structure. Note: we call `self.update()` in order to
         # ensure that the contents of `scene.camera` are correct.
 
-        rgb_viewer = self.env.mujoco_renderer._viewers["rgb_array"]
-        cam = rgb_viewer.scn.camera[self.env.camera_id]
+        pos = self.env.data.cam_xpos[self.env.camera_id]
 
-        #mujoco.mjv_updateScene(
-        #    m=self.env.model,
-        #    d=self.env.data,
-        #    opt=rgb_viewer.vopt,
-        #    pert=mujoco.MjvPerturb(),
-        #    cam=rgb_viewer.cam,
-        #    catmask=mujoco.mjtCatBit.mjCAT_ALL.value,
-        #    scn=rgb_viewer.scn,
-        #)
+        rot_mat = self.env.data.cam_xmat[self.env.camera_id].reshape(3, 3)
+        rot = rot_mat.T
 
-        #self.env.mujoco_renderer.render(render_mode="rgb_array") # TEST: rerendering to ensure it's the correct camera... I guess?
-
-
-        pos = cam.pos
-        z   = -cam.forward
-        y   = cam.up
-        rot = np.vstack((np.cross(y, z), y, z))
         fov = self.env.model.cam_fovy[self.env.camera_id]
 
         h = self._viewports[self.env.camera_name].height
@@ -296,8 +294,8 @@ class SimpleVision(Vision):
 
         # Image matrix (3x3).
         image = np.eye(3)
-        image[0, 2] = (w - 1) / 2.0
-        image[1, 2] = (h - 1) / 2.0
+        image[0, 2] = w  / 2.0
+        image[1, 2] = h  / 2.0
         return image @ focal @ rotation @ translation
 
     
