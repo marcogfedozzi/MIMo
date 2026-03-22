@@ -539,7 +539,7 @@ class LogPolarNCartesianVision(SimpleVision, ILogPolarVision):
     
     def get_2d_from_3d(self, point: NDArray, camera_name: str):
 
-        x, y = self.get_2d_from_3d(point, camera_name)
+        x, y = self.cartesian_vision.get_2d_from_3d(point, camera_name)
 
         if self.is_camera_logpolar[camera_name]:
             return self.logpolar_vision.get_logpolar_from_cartesian_2D(x, y, self.l2c_cameramap[camera_name])
