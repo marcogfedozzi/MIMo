@@ -273,11 +273,6 @@ class SimpleVision(Vision):
 		pos = self.env.data.cam_xpos[self.env.camera_id]
 
 		rot_mat = self.env.data.cam_xmat[self.env.camera_id].reshape(3, 3)
-
-		print("Camera pose in vision: ")
-		print(pos)
-		print(rot_mat)
-		print("---")
 		
 		rot = rot_mat.T
 

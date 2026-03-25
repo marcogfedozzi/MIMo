@@ -727,13 +727,12 @@ def world_quat_to_body(mujoco_data, world_quat: NDArray, body_id: int):
 	Returns:
 		numpy.ndarray: Array of the same shape as the input array with the rotated quaternion.
 	"""
-	body_r = R.from_matrix(mujoco_data.xmat[body_id].reshape(3,3))
-	# rot * body_quat = world_quat
-	# rot = world_quat * inv(body_quat)
-	wld_r = R.from_quat(quat_wlast(world_quat))
-	rot = wld_r * body_r.inv()
-	return quat_wfirst(rot.as_quat())
-	#return rot
+	w_body = R.from_matrix(mujoco_data.xmat[body_id].reshape(3,3))
+	# w_body * r_target = w_target
+	# r_target = inv(w_body) * w_target
+	w_target = R.from_quat(quat_wlast(world_quat))
+	r_target = w_body.inv() * w_target
+	return quat_wfirst(r_target.as_quat())
 
 # ======================== Plotting utils =========================================
 # =================================================================================
