@@ -42,6 +42,7 @@
         <material name="matgeom" texture="texgeom" texuniform="true" rgba="0.8 0.6 .4 1"/>
 		<material name="matmocap" texture="texgeom" texuniform="true" rgba="0.5 0 0.5 0.5"/>
 
+		<material name="yellow_tgt" rgba="0.7 0.7 0.1 1" specular=".2" shininess=".8"/>
 		<material name="red_tgt" rgba="0.8 0 0 1" specular=".2" shininess=".8"/>
 		<material name="green_tgt" rgba="0 0.8 0 1" specular=".2" shininess=".8"/>
 		<material name="blue_tgt" rgba="0.15 0.15 1 1" specular=".2" shininess=".8"/>
@@ -87,6 +88,9 @@
 		<!-- Targets -->
 
 		<body name="head_target" mocap="true" pos=".0 .0 .0">
+			<geom type="sphere" size="0.01" contype="0" conaffinity="0" material="yellow_tgt" group="4"/> 
+		</body>
+		<body name="eyes_target" mocap="true" pos=".0 .0 .0">
 			<geom type="sphere" size="0.01" contype="0" conaffinity="0" material="red_tgt" group="4"/> 
 		</body>
 		<body name="hand_target" mocap="true" pos=".0 .0 .0">
