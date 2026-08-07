@@ -110,6 +110,7 @@ class SceneComposer:
                  toy_template_body_file="body_toy_template.xml",
                  toy_area_frustum_deg=30, toy_distance_range=[0.5, 1.5], toy_scale_range=[0.01, 0.05],
                  toy_z_max=1.0,
+                 toy_clearance=0.2, toy_contact_check_iter_max = 10,
                  init_mimo_pos=[0.0579584, -0.00157173, 0.0566738], init_mimo_quat=[0.70710678, 0., -0.70710678, 0., ],
                  locked_position=False,
                  simulation_timestep = 0.005,
@@ -221,6 +222,9 @@ class SceneComposer:
         self.num_toys = -1
 
         self.simulation_timestep = simulation_timestep
+
+        self.toy_clearance = toy_clearance # minimum space arounf each toy
+        self.toy_contact_check_iter_max = toy_contact_check_iter_max
 
         # Lights
 
@@ -726,8 +730,21 @@ class SceneComposer:
         toys_list = sample_random_toys(Nt)
 
         params = dict(c=self.toy_area_f, a=0, b=np.pi)
-        
-        toy_pos = sample_poses(params)
+
+        # Very simple and inefficient, if a possible collision was found repeat the sampling procedures for max n steps
+        for i in range(self.toy_contact_check_iter_max):
+            toy_pos = sample_poses(params)
+
+            dists = np.linalg.norm(toy_pos[:, None, :] - toy_pos[None, :, :], axis=-1) # distances between each pair of points
+            close_pairs = np.sum(np.int16(dists < self.toy_clearance))/2
+
+            if close_pairs == 0:
+                break
+
+            logging.debug(f"Found {close_pairs} pairs of objects too close, respawning")
+
+        if i == self.toy_contact_check_iter_max:
+            logging.warning(f"Unable to find non conflicting toy placement after {i} attempts. The simulation might be unstable.")
 
         toy_rot = np.random.uniform(0, 2*np.pi, Nt)
 
