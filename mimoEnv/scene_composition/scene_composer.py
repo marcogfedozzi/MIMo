@@ -815,7 +815,8 @@ class SceneComposer:
                 toy_xml = toy_xml[:start] + toy_xml[end + len('</default>'):]
 
             # Write the modified toy_xml into a new file inside self.toys_dir
-            toy_xml_filename = os.path.join(self.tmp_toys_dir, f"toy_{idx}.xml")
+            #toy_xml_filename = os.path.join(self.tmp_toys_dir, f"toy_{idx}.xml")
+            toy_xml_filename = os.path.join(self.tmp_toys_dir, f"{toyname}.xml")
             with open(toy_xml_filename, 'w') as f:
                 f.write(toy_xml)
 
