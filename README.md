@@ -1,4 +1,57 @@
-# MIMo
+# A small extension of MIMo
+
+This is an extension of the MIMo v1 environment to be used with the [PERLA](https://gitlab.iit.it/cognitiveInteraction/perla) architecture.
+The main additions with respect to the original code are:
+
+- **Random Scene Generator**: a new script [scene_composer.py](mimoEnv/scene_composition/scene_composer.py) allows to generate randomized environments that an be used to collect data or directly train a MIMo.
+- **Logpolar Vision**: new classes were added to the [vision.py](mimoVision/vision.py) script, to encode the image collected from an eye into the logpolar domain. 
+- **Vision 2D <-> 3D mapping**: all vision classes in [vision.py](mimoVision/vision.py) have added methods to return the 3D location of a point specified in eye-centric coordinates, and to find the eye-centric coordinates of a 3D point.
+
+## Random Scene Generator
+
+The main point of access is through the **SceneComposer** class.
+The scene is generated as a complete XML file at a given location, that can then be read when instantiating an gymnasium instance of the environment.
+See the source file for a description of all the init parameters. Here are the most common:
+- `mimo_version`: whether to use the "v1" (mitten hands) or "v2" (articulated hands) version;
+- `room_size_min`: the minimum size of the room in meters;
+- `room_size_max`: the maximum size of the room in meters;
+- `output_scene_file`: the name of the generated file;
+- `init_mimo_pos`: the [X,Y,Z] position in the scene of MIMo's root;
+- `init_mimo_quat`: the [w,x,y,z] unit quaternion describing MIMo's root orientation in the scene;
+- `locked_position`: whether to lock MIMo's root in the scene to the original pose.
+- `simulation_timestep`: the $\Delta t$ simulation timestep. Keep it small or convergence might fail ($\sim 1e-5$).
+- `toy_dataset_path`: the path to the directory storing the Toys4K 3D meshes to load.
+- `asset_dir`: the path to the directory storing the textures to load.
+
+### Installing Toys4K
+
+The original dataset is available on [github](https://github.com/rehg-lab/lowshot-shapebias/tree/main/toys4k).
+After following a request form the original data can be downloaded.
+Use the `util_scripts/convert_to_obj.py` from the same [repo](https://github.com/rehg-lab/lowshot-shapebias/tree/main/toys4k) to obtain `.obj` versions of the files
+ 
+## Logpolar Vision
+
+Two additiona camera parameters are needed to define a `LogPolarVision` class:
+- `maxRadius`: specifying what portions of the image is covered;
+- `logFraction`: indicating the compression along the radial axis;
+
+A dedicated class in the same file, `LogPolarNCartesianVision`, returns both logpolar and cartesian mapping for collected images.
+
+All vision classes have been added a `get_cartesian_image` utility method to return a cartesian projection of the generated images irrespective of the original domain (i.e. maps into cartesian from logpolar, while it is a noop otherwise).
+
+## Vision 2D <-> 3D mapping
+
+The method `get_3D_point` uses the camera parameters together with MuJoCo's raycasting to find the [X,Y,Z] coordinates of a [u,v] point in image-space.
+
+The method `get_2D_from_3D` uses the camera parameters to find the projection in image-space [u,v] of the 3D point [X,Y,Z].
+
+Both methods work out of the box for both cartesian and logpolar vision classes.
+
+---
+
+What follows is the original Readme that can be fund
+
+# Mimo
 
 <img src="/docs/source/imgs/showroom.png" width="400" align="right">
 
