@@ -694,7 +694,7 @@ class SceneComposer:
         def sample_random_toys(Nt):
             toys_type_list = next(os.walk(self.toys_dataset_dir))[1] # list all subdirectories in the toys_dir
             assert len(toys_type_list) > 0, "No toy types found in the toys directory"
-            toys_type_list = random.choices(toys_type_list, k=Nt)
+            toys_type_list = random.sample(toys_type_list, k=Nt)
 
             # 2. sample objinstances
             toys_list = []

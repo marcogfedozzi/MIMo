@@ -227,7 +227,7 @@ class SimpleVision(Vision):
 
 		return selid, point
 
-	def get_2d_from_3d(self, point: NDArray, camera_name: str):
+	def get_2D_from_3D(self, point: NDArray, camera_name: str):
 
 		old_mode = self.env.render_mode
 		old_cam_name = self.env.camera_name
@@ -377,8 +377,6 @@ class LogPolarVision(EditVision, ILogPolarVision):
 
 		# see  https://docs.opencv.org/4.x/da/d54/group__imgproc__transform.html#ga49481ab24fdaa0ffa4d3e63d14c0d5e4
 
-
-
 		self.camera_transform_parameters = {}
 
 		for camera, params in camera_parameters.items():
@@ -503,7 +501,7 @@ class LogPolarNCartesianVision(SimpleVision, ILogPolarVision):
 		remapped_logpolar_camera_parameters = {}
 		for camera, params in logpolar_camera_parameters.items():
 			remapped_logpolar_camera_parameters[self.l2c_cameramap[camera]] = params
-		self.logpolar_vision    = LogPolarVision(env, remapped_logpolar_camera_parameters)
+		self.logpolar_vision = LogPolarVision(env, remapped_logpolar_camera_parameters)
 
 		self.camera_parameters = {}
 		self.camera_parameters.update(cartesian_camera_parameters)
@@ -538,9 +536,9 @@ class LogPolarNCartesianVision(SimpleVision, ILogPolarVision):
 		else:
 			raise ValueError(f"The camera {camera_name} is already in cartesian space")
 	
-	def get_2d_from_3d(self, point: NDArray, camera_name: str):
+	def get_2D_from_3D(self, point: NDArray, camera_name: str):
 
-		x, y = self.cartesian_vision.get_2d_from_3d(point, camera_name)
+		x, y = self.cartesian_vision.get_2D_from_3D(point, camera_name)
 
 		if self.is_camera_logpolar[camera_name]:
 			return self.logpolar_vision.get_logpolar_from_cartesian_2D(x, y, self.l2c_cameramap[camera_name])
